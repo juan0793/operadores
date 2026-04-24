@@ -8,6 +8,7 @@ const router = Router();
 const assignmentSchema = z.object({
   route_id: z.number().int(),
   operator_id: z.number().int(),
+  vehicle_name: z.string().min(2).optional(),
   service_day: z.enum(["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"]),
   notes: z.string().optional().nullable(),
 });
@@ -36,9 +37,9 @@ router.post("/", authorize("administrador", "supervisor"), async (req, res, next
   try {
     const data = assignmentSchema.parse(req.body);
     const result = await query(
-      `insert into route_assignments (route_id, operator_id, assigned_by, service_day, notes)
-       values ($1, $2, $3, $4, $5)`,
-      [data.route_id, data.operator_id, req.user.id, data.service_day, data.notes || null]
+      `insert into route_assignments (route_id, operator_id, assigned_by, vehicle_name, service_day, notes)
+       values ($1, $2, $3, $4, $5, $6)`,
+      [data.route_id, data.operator_id, req.user.id, data.vehicle_name || "Aguas de Choluteca", data.service_day, data.notes || null]
     );
     await query("update field_routes set status = 'assigned', updated_at = now() where id = $1", [data.route_id]);
     const created = await query("select * from route_assignments where id = $1", [result.rows.insertId]);

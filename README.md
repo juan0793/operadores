@@ -54,6 +54,7 @@ Archivos disponibles:
   - agregar marcadores de referencia sobre la ruta,
   - listar rutas,
   - asignar rutas a operadores,
+  - nombrar el vehiculo visible en el mapa,
   - programar operadores por dia de lunes a domingo,
   - registrar usuarios de operador,
   - monitorear ubicaciones GPS en tiempo real,
@@ -164,11 +165,13 @@ Modo real:
 2. Escribir el barrio o colonia.
 3. Usar `Agregar marcador` para guardar referencias como inicio, parada, punto critico o fin.
 4. Asignar la ruta al operador.
-5. Seleccionar el dia de operacion: lunes, martes, miercoles, jueves, viernes, sabado o domingo.
-6. Entrar desde un celular como `operador@rutas.local`.
-7. Presionar `Iniciar seguimiento` y aceptar permisos de ubicacion.
-8. En el panel de administrador se vera la linea oficial, los marcadores, el carrito y el rastro punteado del recorrido.
-9. En la pantalla publica se vera un solo carrito por ruta/operador, no un carrito por cada punto GPS.
+5. Escribir el nombre del vehiculo, por ejemplo `Unidad Azul 07`.
+6. Seleccionar el dia de operacion: lunes, martes, miercoles, jueves, viernes, sabado o domingo.
+7. Entrar desde un celular como `operador@rutas.local`.
+8. El operador vera solo sus rutas asignadas y podra abrir el mapa de la ruta.
+9. Presionar `Iniciar seguimiento` y aceptar permisos de ubicacion.
+10. En el panel de administrador se vera la linea oficial, los marcadores, el carrito y el rastro punteado del recorrido.
+11. En la pantalla publica se vera un solo carrito por ruta/operador, no un carrito por cada punto GPS.
 
 Modo demo:
 

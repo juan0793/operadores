@@ -122,8 +122,9 @@ router.post("/", async (req, res, next) => {
 router.get("/latest", async (_req, res, next) => {
   try {
     const result = await query(
-      `select ol.*, u.name as operator_name, r.name as route_name, r.color
+      `select ol.*, a.vehicle_name, u.name as operator_name, r.name as route_name, r.color
        from operator_locations ol
+       join route_assignments a on a.id = ol.assignment_id
        join users u on u.id = ol.operator_id
        join field_routes r on r.id = ol.route_id
        join (
@@ -143,8 +144,9 @@ router.get("/tracks", async (_req, res, next) => {
   try {
     const result = await query(
       `select ol.assignment_id, ol.route_id, ol.operator_id, ol.latitude, ol.longitude,
-              ol.recorded_at, u.name as operator_name, r.name as route_name, r.color
+              ol.recorded_at, a.vehicle_name, u.name as operator_name, r.name as route_name, r.color
        from operator_locations ol
+       join route_assignments a on a.id = ol.assignment_id
        join users u on u.id = ol.operator_id
        join field_routes r on r.id = ol.route_id
        where ol.recorded_at >= date_sub(now(), interval 12 hour)
@@ -158,6 +160,7 @@ router.get("/tracks", async (_req, res, next) => {
           assignment_id: row.assignment_id,
           route_id: row.route_id,
           operator_id: row.operator_id,
+          vehicle_name: row.vehicle_name,
           operator_name: row.operator_name,
           route_name: row.route_name,
           color: row.color,

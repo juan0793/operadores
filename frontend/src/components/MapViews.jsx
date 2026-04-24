@@ -10,12 +10,24 @@ const markerIcon = new L.Icon({
   iconAnchor: [12, 41],
 });
 
-const vehicleIcon = new L.DivIcon({
-  className: "vehicle-marker",
-  html: '<span class="vehicle-label">Aguas de Choluteca</span><span class="vehicle-body"><span class="vehicle-window"></span><span class="vehicle-stripe"></span></span>',
-  iconSize: [128, 58],
-  iconAnchor: [64, 38],
-});
+function escapeHtml(value) {
+  return String(value || "Aguas de Choluteca")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function createVehicleIcon(vehicleName) {
+  const label = escapeHtml(vehicleName || "Aguas de Choluteca");
+  return new L.DivIcon({
+    className: "vehicle-marker",
+    html: `<span class="vehicle-label">${label}</span><span class="vehicle-body"><span class="vehicle-window"></span><span class="vehicle-stripe"></span></span>`,
+    iconSize: [128, 58],
+    iconAnchor: [64, 38],
+  });
+}
 
 const routeMarkerIcon = new L.DivIcon({
   className: "route-special-marker",
@@ -136,9 +148,10 @@ export function MonitorMap({ routes = [], locations = [], tracks = [], compact =
         ) : null
       )}
       {locations.map((loc) => (
-        <Marker key={`${loc.assignment_id}-${loc.recorded_at || loc.last_location_at}`} position={[Number(loc.latitude), Number(loc.longitude)]} icon={vehicleIcon}>
+        <Marker key={`${loc.assignment_id}-${loc.recorded_at || loc.last_location_at}`} position={[Number(loc.latitude), Number(loc.longitude)]} icon={createVehicleIcon(loc.vehicle_name)}>
           <Popup>
-            <strong>{loc.operator_name || "Operador"}</strong>
+            <strong>{loc.vehicle_name || "Aguas de Choluteca"}</strong>
+            <span>{loc.operator_name || "Operador"}</span>
             <span>{loc.route_name || loc.name}</span>
           </Popup>
         </Marker>

@@ -56,6 +56,7 @@ create table if not exists route_assignments (
   route_id bigint not null,
   operator_id bigint not null,
   assigned_by bigint,
+  vehicle_name varchar(120) not null default 'Aguas de Choluteca',
   service_day enum('lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo') not null default 'lunes',
   status enum('assigned', 'in_progress', 'completed', 'cancelled') not null default 'assigned',
   progress_percent decimal(5, 2) not null default 0,

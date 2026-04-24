@@ -84,6 +84,12 @@ a {
   align-content: start;
 }
 
+.form-hint {
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
 label {
   display: grid;
   gap: 6px;

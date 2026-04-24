@@ -21,6 +21,7 @@ export function publicRoute(row) {
     description: row.description,
     color: row.color,
     status: row.status,
+    vehicle_name: row.vehicle_name || "Aguas de Choluteca",
     service_day: row.service_day || null,
     progress_percent: Number(row.progress_percent || 0),
     started_at: row.started_at,

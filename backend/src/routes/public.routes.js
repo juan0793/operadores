@@ -9,7 +9,7 @@ router.get("/routes", async (_req, res, next) => {
     const result = await query(
       `select r.id, r.name, r.neighborhood, r.description, r.color, r.status,
               coalesce(a.progress_percent, 0) as progress_percent,
-              a.service_day, a.started_at, a.completed_at,
+              a.vehicle_name, a.service_day, a.started_at, a.completed_at,
               u.name as operator_name,
               latest.recorded_at as last_location_at,
               latest.latitude, latest.longitude,
@@ -36,7 +36,7 @@ router.get("/routes", async (_req, res, next) => {
          ) mx on mx.route_id = ol.route_id and mx.id = ol.id
        ) latest on latest.route_id = r.id
        where r.is_public = true
-       group by r.id, a.progress_percent, a.service_day, a.started_at, a.completed_at, u.name,
+       group by r.id, a.progress_percent, a.vehicle_name, a.service_day, a.started_at, a.completed_at, u.name,
                 latest.recorded_at, latest.latitude, latest.longitude
        order by r.updated_at desc`
     );

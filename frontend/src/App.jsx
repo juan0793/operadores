@@ -140,6 +140,7 @@ function AdminDashboard({ user }) {
   const [markerDraft, setMarkerDraft] = useState({ label: "", marker_type: "referencia" });
   const [selectedRoute, setSelectedRoute] = useState("");
   const [selectedOperator, setSelectedOperator] = useState("");
+  const [selectedVehicleName, setSelectedVehicleName] = useState("Aguas de Choluteca");
   const [selectedDay, setSelectedDay] = useState("lunes");
 
   async function load() {
@@ -190,10 +191,16 @@ function AdminDashboard({ user }) {
     event.preventDefault();
     await apiFetch("/api/assignments", {
       method: "POST",
-      body: JSON.stringify({ route_id: Number(selectedRoute), operator_id: Number(selectedOperator), service_day: selectedDay }),
+      body: JSON.stringify({
+        route_id: Number(selectedRoute),
+        operator_id: Number(selectedOperator),
+        vehicle_name: selectedVehicleName,
+        service_day: selectedDay,
+      }),
     });
     setSelectedRoute("");
     setSelectedOperator("");
+    setSelectedVehicleName("Aguas de Choluteca");
     setSelectedDay("lunes");
     await load();
   }
@@ -296,6 +303,7 @@ function AdminDashboard({ user }) {
       <section className="panel">
         <div className="panel-title"><Users /><h2>Asignar operador</h2></div>
         <form className="stack" onSubmit={assignRoute}>
+          <span className="form-hint">Selecciona la ruta, el operador, el nombre visible del vehículo y el día de trabajo.</span>
           <select value={selectedRoute} onChange={(e) => setSelectedRoute(e.target.value)} required>
             <option value="">Seleccionar ruta</option>
             {routes.map((route) => <option key={route.id} value={route.id}>{route.name}</option>)}
@@ -304,6 +312,7 @@ function AdminDashboard({ user }) {
             <option value="">Seleccionar operador</option>
             {operators.map((op) => <option key={op.id} value={op.id}>{op.name}</option>)}
           </select>
+          <input value={selectedVehicleName} onChange={(e) => setSelectedVehicleName(e.target.value)} placeholder="Nombre del vehiculo" required />
           <select value={selectedDay} onChange={(e) => setSelectedDay(e.target.value)} required>
             {weekDays.map((day) => <option key={day.value} value={day.value}>{day.label}</option>)}
           </select>
@@ -347,6 +356,7 @@ function AdminDashboard({ user }) {
               ) : day.assignments.map((assignment) => (
                 <span className="day-assignment" key={assignment.id}>
                   <strong>{assignment.operator_name}</strong>
+                  <small>{assignment.vehicle_name || "Aguas de Choluteca"}</small>
                   <small>{assignment.route_name}</small>
                 </span>
               ))}
@@ -375,7 +385,8 @@ function AdminDashboard({ user }) {
               <article className="vehicle-card" key={`vehicle-${assignment.id}`}>
                 <div>
                   <span className="badge">{dayLabel(assignment.service_day)}</span>
-                  <h3>{assignment.operator_name}</h3>
+                  <h3>{assignment.vehicle_name || "Aguas de Choluteca"}</h3>
+                  <p>{assignment.operator_name}</p>
                   <p>{assignment.route_name}</p>
                 </div>
                 <strong>{Number(assignment.progress_percent)}%</strong>
@@ -408,12 +419,13 @@ function AdminDashboard({ user }) {
         <div className="panel-title"><ClipboardList /><h2>Historial</h2></div>
         <div className="table-wrap">
           <table>
-            <thead><tr><th>Ruta</th><th>Barrio</th><th>Operador</th><th>Dia</th><th>Estado</th><th>Avance</th><th>Asignada</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>Ruta</th><th>Barrio</th><th>Vehiculo</th><th>Operador</th><th>Dia</th><th>Estado</th><th>Avance</th><th>Asignada</th><th>Acciones</th></tr></thead>
             <tbody>
               {assignments.map((item) => (
                 <tr key={item.id}>
                   <td><button className="link-button" onClick={() => openRoute({ id: item.route_id })}>{item.route_name}</button></td>
                   <td>{item.neighborhood || "-"}</td>
+                  <td>{item.vehicle_name || "Aguas de Choluteca"}</td>
                   <td>{item.operator_name}</td>
                   <td>{dayLabel(item.service_day)}</td>
                   <td><span className="badge">{statusLabel(item.status)}</span></td>
@@ -575,7 +587,8 @@ function OperatorDashboard({ user }) {
         {active && (
           <div className="operator-card">
             <span className="badge">{statusLabel(active.status)}</span>
-            <h3>{active.route_name}</h3>
+            <h3>{active.vehicle_name || "Aguas de Choluteca"}</h3>
+            <p>{active.route_name}</p>
             <p>{dayLabel(active.service_day)}</p>
             <div className="progress"><span style={{ width: `${Number(active.progress_percent)}%` }} /></div>
             <p>{Number(active.progress_percent)}% reportado</p>
@@ -650,6 +663,7 @@ function PublicScreen() {
             <span className="badge">{statusLabel(route.status)}</span>
             <h2>{route.name}</h2>
             {route.neighborhood && <small>{route.neighborhood}</small>}
+            {route.vehicle_name && <small>{route.vehicle_name}</small>}
             {route.service_day && <small>{dayLabel(route.service_day)}</small>}
             <p>{route.description}</p>
             <div className="progress"><span style={{ width: `${route.progress_percent}%`, background: route.color }} /></div>
