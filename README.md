@@ -55,21 +55,27 @@ Archivos disponibles:
   - listar rutas,
   - asignar rutas a operadores,
   - programar operadores por dia de lunes a domingo,
+  - registrar usuarios de operador,
   - monitorear ubicaciones GPS en tiempo real,
   - ver el carrito del operador y el rastro recorrido,
+  - ver vehiculos asignados en tarjetas operativas,
   - simular un recorrido para demostraciones,
-  - ver resumen e historial.
+  - ver resumen e historial por ruta,
+  - eliminar rutas desde el panel administrativo.
 - Operador:
   - ver rutas asignadas,
+  - ver el mapa de su ruta desde el celular,
   - iniciar captura GPS desde dispositivo movil,
   - reportar ubicacion GPS,
   - calcular avance segun la ruta trazada,
   - recibir aviso si se desvia de la ruta,
+  - guardar ubicaciones en el navegador si no hay internet y sincronizarlas al volver la conexion,
   - finalizar ruta.
 - Alertas:
   - el backend compara cada ubicacion contra la linea oficial de la ruta,
   - registra evento `route_deviation` si el operador supera `DEVIATION_WARNING_METERS`,
-  - muestra alertas en el monitoreo interno sin publicarlas en la pantalla ciudadana.
+  - muestra alertas en el monitoreo interno sin publicarlas en la pantalla ciudadana,
+  - avisa al operador en su pantalla movil si se sale de la ruta.
 - Pantalla publica:
   - acceso en `/public`,
   - muestra solo rutas marcadas como publicas,

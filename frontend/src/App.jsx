@@ -1,4 +1,4 @@
-import { Activity, AlertTriangle, ClipboardList, LogOut, MapPin, Navigation, Play, Plus, Radio, Route, Users } from "lucide-react";
+import { Activity, AlertTriangle, ClipboardList, History, LogOut, MapPin, Navigation, Play, Plus, Radio, Route, Trash2, UserPlus, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { io } from "socket.io-client";
 import { apiFetch, getApiUrl } from "./api.js";
@@ -133,7 +133,9 @@ function AdminDashboard({ user }) {
   const [tracks, setTracks] = useState([]);
   const [warnings, setWarnings] = useState([]);
   const [summary, setSummary] = useState(null);
+  const [history, setHistory] = useState(null);
   const [form, setForm] = useState(emptyRoute);
+  const [operatorForm, setOperatorForm] = useState({ name: "", email: "", phone: "", password: "Rutas123" });
   const [mapMode, setMapMode] = useState("route");
   const [markerDraft, setMarkerDraft] = useState({ label: "", marker_type: "referencia" });
   const [selectedRoute, setSelectedRoute] = useState("");
@@ -199,6 +201,27 @@ function AdminDashboard({ user }) {
   async function openRoute(route) {
     const detail = await apiFetch(`/api/routes/${route.id}`);
     setRoutes((current) => current.map((item) => (item.id === route.id ? detail : item)));
+  }
+
+  async function deleteRoute(route) {
+    if (!window.confirm(`Eliminar la ruta "${route.name}" y todo su historial asociado?`)) return;
+    await apiFetch(`/api/routes/${route.id}`, { method: "DELETE" });
+    await load();
+  }
+
+  async function showRouteHistory(route) {
+    const detail = await apiFetch(`/api/routes/${route.id}/history`);
+    setHistory(detail);
+  }
+
+  async function createOperator(event) {
+    event.preventDefault();
+    await apiFetch("/api/users", {
+      method: "POST",
+      body: JSON.stringify({ ...operatorForm, role: "operador", is_active: true }),
+    });
+    setOperatorForm({ name: "", email: "", phone: "", password: "Rutas123" });
+    await load();
   }
 
   async function simulateRoute(assignment) {
@@ -288,6 +311,19 @@ function AdminDashboard({ user }) {
         </form>
       </section>
 
+      {user.role === "administrador" && (
+        <section className="panel">
+          <div className="panel-title"><UserPlus /><h2>Registrar operador</h2></div>
+          <form className="stack" onSubmit={createOperator}>
+            <input value={operatorForm.name} onChange={(e) => setOperatorForm({ ...operatorForm, name: e.target.value })} placeholder="Nombre del operador" required />
+            <input value={operatorForm.email} onChange={(e) => setOperatorForm({ ...operatorForm, email: e.target.value })} placeholder="correo@ejemplo.com" required />
+            <input value={operatorForm.phone} onChange={(e) => setOperatorForm({ ...operatorForm, phone: e.target.value })} placeholder="Telefono" />
+            <input value={operatorForm.password} onChange={(e) => setOperatorForm({ ...operatorForm, password: e.target.value })} placeholder="Contrasena temporal" required />
+            <button className="primary">Crear operador</button>
+          </form>
+        </section>
+      )}
+
       <section className="panel">
         <div className="panel-title"><Activity /><h2>Resumen</h2></div>
         {summary && (
@@ -321,7 +357,33 @@ function AdminDashboard({ user }) {
 
       <section id="monitoreo" className="panel wide">
         <div className="panel-title"><Radio /><h2>Monitoreo en tiempo real</h2></div>
+        <div className="map-dashboard">
+          <span><strong>{locations.length}</strong> vehiculos activos</span>
+          <span><strong>{routes.length}</strong> rutas</span>
+          <span><strong>{warnings.length}</strong> alertas</span>
+          <span><strong>{tracks.reduce((total, track) => total + (track.points?.length || 0), 0)}</strong> puntos GPS</span>
+        </div>
         <MonitorMap routes={detailedRoutes} locations={locations} tracks={tracks} />
+      </section>
+
+      <section className="panel wide">
+        <div className="panel-title"><Navigation /><h2>Vehiculos asignados</h2></div>
+        <div className="vehicle-grid">
+          {assignments.map((assignment) => {
+            const latest = locations.find((location) => Number(location.assignment_id) === Number(assignment.id));
+            return (
+              <article className="vehicle-card" key={`vehicle-${assignment.id}`}>
+                <div>
+                  <span className="badge">{dayLabel(assignment.service_day)}</span>
+                  <h3>{assignment.operator_name}</h3>
+                  <p>{assignment.route_name}</p>
+                </div>
+                <strong>{Number(assignment.progress_percent)}%</strong>
+                <small>{latest ? `GPS ${new Date(latest.recorded_at).toLocaleTimeString()}` : "Sin GPS reciente"}</small>
+              </article>
+            );
+          })}
+        </div>
       </section>
 
       <section className="panel wide">
@@ -346,7 +408,7 @@ function AdminDashboard({ user }) {
         <div className="panel-title"><ClipboardList /><h2>Historial</h2></div>
         <div className="table-wrap">
           <table>
-            <thead><tr><th>Ruta</th><th>Barrio</th><th>Operador</th><th>Dia</th><th>Estado</th><th>Avance</th><th>Asignada</th><th>Demo</th></tr></thead>
+            <thead><tr><th>Ruta</th><th>Barrio</th><th>Operador</th><th>Dia</th><th>Estado</th><th>Avance</th><th>Asignada</th><th>Acciones</th></tr></thead>
             <tbody>
               {assignments.map((item) => (
                 <tr key={item.id}>
@@ -357,13 +419,43 @@ function AdminDashboard({ user }) {
                   <td><span className="badge">{statusLabel(item.status)}</span></td>
                   <td>{Number(item.progress_percent)}%</td>
                   <td>{new Date(item.assigned_at).toLocaleString()}</td>
-                  <td><button className="link-button" type="button" onClick={() => simulateRoute(item)}>Simular recorrido</button></td>
+                  <td className="table-actions">
+                    <button className="link-button" type="button" onClick={() => simulateRoute(item)}>Simular</button>
+                    <button className="link-button" type="button" onClick={() => showRouteHistory({ id: item.route_id })}><History size={16} />Historial</button>
+                    {user.role === "administrador" && <button className="danger-link" type="button" onClick={() => deleteRoute({ id: item.route_id, name: item.route_name })}><Trash2 size={16} />Eliminar</button>}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </section>
+
+      {history && (
+        <section className="panel wide">
+          <div className="panel-title"><History /><h2>Historial de {history.route.name}</h2></div>
+          <div className="history-grid">
+            <article><strong>{history.assignments.length}</strong><span>Asignaciones</span></article>
+            <article><strong>{history.locations.length}</strong><span>Ubicaciones</span></article>
+            <article><strong>{history.events.length}</strong><span>Eventos</span></article>
+          </div>
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Fecha</th><th>Operador</th><th>Evento</th><th>Detalle</th></tr></thead>
+              <tbody>
+                {history.events.map((event) => (
+                  <tr key={event.id}>
+                    <td>{new Date(event.created_at).toLocaleString()}</td>
+                    <td>{event.operator_name || "-"}</td>
+                    <td>{event.event_type}</td>
+                    <td>{event.notes || "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
@@ -371,8 +463,10 @@ function AdminDashboard({ user }) {
 function OperatorDashboard({ user }) {
   const [assignments, setAssignments] = useState([]);
   const [active, setActive] = useState(null);
+  const [activeRoute, setActiveRoute] = useState(null);
   const [watching, setWatching] = useState(false);
   const [message, setMessage] = useState("");
+  const [offlineCount, setOfflineCount] = useState(() => JSON.parse(localStorage.getItem("rutas_pending_locations") || "[]").length);
 
   async function load() {
     const list = await apiFetch("/api/assignments");
@@ -381,6 +475,41 @@ function OperatorDashboard({ user }) {
   }
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    if (!active?.route_id) return;
+    apiFetch(`/api/routes/${active.route_id}`).then(setActiveRoute).catch(() => {});
+  }, [active?.route_id]);
+
+  function readQueue() {
+    return JSON.parse(localStorage.getItem("rutas_pending_locations") || "[]");
+  }
+
+  function writeQueue(items) {
+    localStorage.setItem("rutas_pending_locations", JSON.stringify(items));
+    setOfflineCount(items.length);
+  }
+
+  async function flushQueue() {
+    const items = readQueue();
+    if (items.length === 0 || !navigator.onLine) return;
+    const pending = [];
+    for (const item of items) {
+      try {
+        await apiFetch("/api/locations", { method: "POST", body: JSON.stringify(item) });
+      } catch {
+        pending.push(item);
+      }
+    }
+    writeQueue(pending);
+    if (items.length !== pending.length) setMessage("Ubicaciones pendientes sincronizadas.");
+  }
+
+  useEffect(() => {
+    window.addEventListener("online", flushQueue);
+    flushQueue();
+    return () => window.removeEventListener("online", flushQueue);
+  }, []);
 
   function startGps() {
     if (!active) return;
@@ -392,19 +521,29 @@ function OperatorDashboard({ user }) {
     const socket = io(getApiUrl(), { auth: { token: localStorage.getItem("rutas_token") } });
     navigator.geolocation.watchPosition(
       (position) => {
-        socket.emit("operator:location", {
+        const payload = {
           assignment_id: active.id,
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
           accuracy: position.coords.accuracy,
           speed: position.coords.speed,
           heading: position.coords.heading,
-        }, (response) => {
+        };
+
+        if (!navigator.onLine) {
+          writeQueue([...readQueue(), payload]);
+          setMessage("Sin internet: ubicacion guardada para sincronizar luego.");
+          return;
+        }
+
+        socket.emit("operator:location", payload, (response) => {
           if (response?.location?.progress_percent !== undefined) {
             setActive((item) => ({ ...item, progress_percent: response.location.progress_percent, status: "in_progress" }));
           }
           if (response?.location?.warning) {
-            setMessage(`Atencion: estas a ${response.location.warning.distance_meters} m de la ruta marcada.`);
+            setMessage(`Advertencia: estas a ${response.location.warning.distance_meters} m de la ruta establecida.`);
+          } else {
+            setMessage("Ubicacion transmitida correctamente.");
           }
         });
       },
@@ -444,6 +583,12 @@ function OperatorDashboard({ user }) {
             <button className="ghost big" onClick={complete}>Finalizar ruta</button>
           </div>
         )}
+        {activeRoute && (
+          <div className="operator-map">
+            <MonitorMap routes={[activeRoute]} locations={[]} tracks={[]} compact />
+          </div>
+        )}
+        {offlineCount > 0 && <p className="notice">{offlineCount} ubicaciones pendientes por sincronizar.</p>}
         {message && <p className="notice">{message}</p>}
       </section>
     </main>

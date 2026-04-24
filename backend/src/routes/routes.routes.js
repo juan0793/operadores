@@ -188,4 +188,52 @@ router.put("/:id", authorize("administrador", "supervisor"), async (req, res, ne
   }
 });
 
+router.get("/:id/history", authorize("administrador", "supervisor"), async (req, res, next) => {
+  try {
+    const route = await query("select id, name, neighborhood, status from field_routes where id = $1", [req.params.id]);
+    if (!route.rows[0]) return res.status(404).json({ message: "Ruta no encontrada" });
+
+    const assignments = await query(
+      `select a.*, u.name as operator_name, u.email as operator_email
+       from route_assignments a
+       join users u on u.id = a.operator_id
+       where a.route_id = $1
+       order by a.assigned_at desc`,
+      [req.params.id]
+    );
+    const locations = await query(
+      `select ol.*, u.name as operator_name
+       from operator_locations ol
+       join users u on u.id = ol.operator_id
+       where ol.route_id = $1
+       order by ol.recorded_at desc
+       limit 250`,
+      [req.params.id]
+    );
+    const events = await query(
+      `select e.*, u.name as operator_name
+       from route_events e
+       left join users u on u.id = e.operator_id
+       where e.route_id = $1
+       order by e.created_at desc
+       limit 100`,
+      [req.params.id]
+    );
+
+    res.json({ route: route.rows[0], assignments: assignments.rows, locations: locations.rows, events: events.rows });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/:id", authorize("administrador"), async (req, res, next) => {
+  try {
+    const result = await query("delete from field_routes where id = $1", [req.params.id]);
+    if (result.rows.affectedRows === 0) return res.status(404).json({ message: "Ruta no encontrada" });
+    res.json({ ok: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

@@ -307,6 +307,26 @@ textarea {
   border: 1px solid #cbd5e1;
 }
 
+.map-dashboard {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.map-dashboard span {
+  display: grid;
+  padding: 12px;
+  border-radius: 8px;
+  color: #0f172a;
+  background: #e0f2fe;
+}
+
+.map-dashboard strong {
+  color: #0f766e;
+  font-size: 1.4rem;
+}
+
 .route-special-marker {
   display: grid;
   place-items: center;
@@ -454,6 +474,13 @@ textarea {
   overflow-x: auto;
 }
 
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -479,11 +506,57 @@ td {
 }
 
 .link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   border: 0;
   padding: 0;
   color: #0f766e;
   background: transparent;
   font-weight: 800;
+}
+
+.danger-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  padding: 0;
+  color: #dc2626;
+  background: transparent;
+  font-weight: 800;
+}
+
+.vehicle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.vehicle-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  align-items: start;
+  padding: 14px;
+  border: 1px solid #d8e0ea;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.vehicle-card h3,
+.vehicle-card p {
+  margin: 6px 0 0;
+}
+
+.vehicle-card strong {
+  color: #0f766e;
+  font-size: 1.4rem;
+}
+
+.vehicle-card small {
+  grid-column: 1 / -1;
+  color: #64748b;
 }
 
 .operator-view {
@@ -502,6 +575,11 @@ td {
 .operator-card {
   display: grid;
   gap: 12px;
+  margin-top: 16px;
+}
+
+.operator-map {
+  height: 300px;
   margin-top: 16px;
 }
 
@@ -639,6 +717,25 @@ td {
   color: #64748b;
 }
 
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.history-grid article {
+  display: grid;
+  padding: 12px;
+  border-radius: 8px;
+  background: #f1f5f9;
+}
+
+.history-grid strong {
+  color: #0f766e;
+  font-size: 1.5rem;
+}
+
 @media (max-width: 900px) {
   .login-panel,
   .app-shell,
@@ -660,6 +757,11 @@ td {
   .public-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .map-dashboard,
+  .history-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .public-focus {
@@ -694,6 +796,11 @@ td {
   }
 
   .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .map-dashboard,
+  .history-grid {
     grid-template-columns: 1fr;
   }
 
