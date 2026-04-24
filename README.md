@@ -1,0 +1,176 @@
+# Sistema Rutas Operadores
+
+Sistema web independiente para crear rutas en mapa, asignarlas a operadores de campo, capturar GPS desde movil y publicar el avance en una pantalla ciudadana sin datos sensibles.
+
+Este proyecto no depende del sistema de clandestinos. Vive en su propia carpeta, con frontend y backend separados.
+
+## Stack
+
+- Frontend: React + Vite
+- Backend: Node.js + Express
+- Base de datos: PostgreSQL
+- Mapa: Leaflet + OpenStreetMap
+- Tiempo real: Socket.IO
+- Autenticacion: JWT con roles `administrador`, `supervisor`, `operador` y `publico`
+- Despliegue: preparado para Railway con variables de entorno
+
+## Estructura
+
+```text
+sistema-rutas-operadores/
+  backend/
+    sql/schema.sql
+    src/
+      routes/
+      middleware/
+      app.js
+      server.js
+  frontend/
+    src/
+      components/
+      App.jsx
+      styles.css
+  railway.json
+  package.json
+```
+
+## Funcionalidades incluidas
+
+- Login con roles.
+- Administrador/supervisor:
+  - crear rutas trazando puntos sobre el mapa,
+  - listar rutas,
+  - asignar rutas a operadores,
+  - monitorear ubicaciones GPS en tiempo real,
+  - ver resumen e historial.
+- Operador:
+  - ver rutas asignadas,
+  - iniciar captura GPS desde dispositivo movil,
+  - reportar avance,
+  - finalizar ruta.
+- Pantalla publica:
+  - acceso en `/public`,
+  - muestra solo rutas marcadas como publicas,
+  - oculta correo, telefono y datos internos,
+  - actualiza por Socket.IO y por respaldo cada 30 segundos.
+
+## Configuracion local
+
+1. Crear base PostgreSQL:
+
+```bash
+createdb sistema_rutas_operadores
+```
+
+2. Ejecutar el esquema:
+
+```bash
+psql sistema_rutas_operadores < backend/sql/schema.sql
+```
+
+3. Crear archivos de entorno:
+
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+4. Ajustar `backend/.env`:
+
+```env
+PORT=4001
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sistema_rutas_operadores
+JWT_SECRET=cambiar_este_secreto_en_produccion
+FRONTEND_URL=http://localhost:5174
+```
+
+5. Instalar dependencias:
+
+```bash
+npm run install:all
+```
+
+6. Crear usuarios iniciales:
+
+```bash
+npm run db:seed
+```
+
+Usuarios de prueba:
+
+```text
+admin@rutas.local / Rutas123
+supervisor@rutas.local / Rutas123
+operador@rutas.local / Rutas123
+publico@rutas.local / Rutas123
+```
+
+7. Iniciar backend y frontend en dos terminales:
+
+```bash
+npm run dev:backend
+npm run dev:frontend
+```
+
+URLs:
+
+```text
+Frontend: http://localhost:5174
+Pantalla publica: http://localhost:5174/public
+Backend: http://localhost:4001
+Health: http://localhost:4001/health
+```
+
+## Despliegue en Railway
+
+### Backend
+
+Crear un servicio desde esta carpeta o desde el repositorio usando root directory `sistema-rutas-operadores`.
+
+Variables:
+
+```env
+NODE_ENV=production
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+JWT_SECRET=un_secreto_largo_y_privado
+JWT_EXPIRES_IN=8h
+FRONTEND_URL=https://tu-frontend.railway.app
+```
+
+Comando de inicio:
+
+```bash
+npm --prefix backend start
+```
+
+Ejecutar `backend/sql/schema.sql` en la base PostgreSQL de Railway y luego el seed si se desean usuarios iniciales.
+
+### Frontend
+
+Crear otro servicio con root directory `sistema-rutas-operadores/frontend`.
+
+Variables:
+
+```env
+VITE_API_URL=https://tu-backend.railway.app
+```
+
+Comandos:
+
+```bash
+npm install
+npm run build
+```
+
+Directorio de salida:
+
+```text
+dist
+```
+
+## Notas de seguridad
+
+- Cambiar `JWT_SECRET` antes de produccion.
+- Cambiar las contrasenas creadas por el seed.
+- La pantalla publica usa `/api/public/routes` y no entrega correos, telefonos ni identificadores internos de usuarios.
+- La app queda lista para integrarse mas adelante con el sistema de clandestinos mediante enlaces o API, sin dependencia directa.
