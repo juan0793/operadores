@@ -269,7 +269,7 @@ textarea {
 
 .route-form {
   display: grid;
-  grid-template-columns: 1fr 120px;
+  grid-template-columns: 1fr 1fr 120px;
   gap: 14px;
 }
 
@@ -305,6 +305,51 @@ textarea {
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid #cbd5e1;
+}
+
+.route-special-marker {
+  display: grid;
+  place-items: center;
+}
+
+.route-special-dot {
+  width: 22px;
+  height: 22px;
+  border: 3px solid #ffffff;
+  border-radius: 999px;
+  background: #f97316;
+  box-shadow: 0 5px 16px rgba(15, 23, 42, 0.32);
+}
+
+.marker-tools {
+  display: grid;
+  grid-template-columns: auto 1fr 180px;
+  gap: 10px;
+  align-items: center;
+}
+
+.segmented {
+  display: inline-grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 4px;
+  padding: 4px;
+  border-radius: 8px;
+  background: #e2e8f0;
+}
+
+.segmented button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: #334155;
+  background: transparent;
+  font-weight: 800;
+}
+
+.segmented button.active {
+  color: #ffffff;
+  background: #0f766e;
 }
 
 .vehicle-marker {
@@ -587,6 +632,10 @@ td {
   }
 
   .route-form {
+    grid-template-columns: 1fr;
+  }
+
+  .marker-tools {
     grid-template-columns: 1fr;
   }
 

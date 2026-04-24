@@ -50,6 +50,8 @@ Archivos disponibles:
 - Login con roles.
 - Administrador/supervisor:
   - crear rutas trazando puntos sobre el mapa,
+  - guardar rutas por barrio o colonia,
+  - agregar marcadores de referencia sobre la ruta,
   - listar rutas,
   - asignar rutas a operadores,
   - monitorear ubicaciones GPS en tiempo real,
@@ -152,11 +154,13 @@ Health: http://localhost:4001/health
 Modo real:
 
 1. Entrar como administrador y crear una ruta con varios puntos.
-2. Asignar la ruta al operador.
-3. Entrar desde un celular como `operador@rutas.local`.
-4. Presionar `Iniciar seguimiento` y aceptar permisos de ubicacion.
-5. En el panel de administrador se vera la linea oficial, el carrito y el rastro punteado del recorrido.
-6. En la pantalla publica se vera un solo carrito por ruta/operador, no un carrito por cada punto GPS.
+2. Escribir el barrio o colonia.
+3. Usar `Agregar marcador` para guardar referencias como inicio, parada, punto critico o fin.
+4. Asignar la ruta al operador.
+5. Entrar desde un celular como `operador@rutas.local`.
+6. Presionar `Iniciar seguimiento` y aceptar permisos de ubicacion.
+7. En el panel de administrador se vera la linea oficial, los marcadores, el carrito y el rastro punteado del recorrido.
+8. En la pantalla publica se vera un solo carrito por ruta/operador, no un carrito por cada punto GPS.
 
 Modo demo:
 

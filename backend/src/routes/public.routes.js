@@ -7,7 +7,7 @@ const router = Router();
 router.get("/routes", async (_req, res, next) => {
   try {
     const result = await query(
-      `select r.id, r.name, r.description, r.color, r.status,
+      `select r.id, r.name, r.neighborhood, r.description, r.color, r.status,
               coalesce(a.progress_percent, 0) as progress_percent,
               a.started_at, a.completed_at,
               u.name as operator_name,

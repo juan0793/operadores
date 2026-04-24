@@ -1,6 +1,7 @@
 export function normalizeRoutePayload(body) {
   return {
     name: body.name?.trim(),
+    neighborhood: body.neighborhood?.trim() || null,
     description: body.description?.trim() || null,
     color: body.color || "#2563eb",
     status: body.status || "draft",
@@ -8,6 +9,7 @@ export function normalizeRoutePayload(body) {
     ends_at: body.ends_at || null,
     is_public: Boolean(body.is_public),
     points: Array.isArray(body.points) ? body.points : [],
+    markers: Array.isArray(body.markers) ? body.markers : [],
   };
 }
 
@@ -15,6 +17,7 @@ export function publicRoute(row) {
   return {
     id: row.id,
     name: row.name,
+    neighborhood: row.neighborhood,
     description: row.description,
     color: row.color,
     status: row.status,

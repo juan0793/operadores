@@ -17,6 +17,13 @@ const vehicleIcon = new L.DivIcon({
   iconAnchor: [17, 17],
 });
 
+const routeMarkerIcon = new L.DivIcon({
+  className: "route-special-marker",
+  html: '<span class="route-special-dot"></span>',
+  iconSize: [26, 26],
+  iconAnchor: [13, 13],
+});
+
 const hondurasCenter = [14.0818, -87.2068];
 const cityTiles = {
   url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
@@ -40,18 +47,27 @@ function ClickCollector({ onAddPoint }) {
   return null;
 }
 
-export function RouteEditorMap({ points, color = "#2563eb", onAddPoint, onRemovePoint }) {
+export function RouteEditorMap({ points, markers = [], color = "#2563eb", onAddPoint, onRemovePoint, onAddMarker, onRemoveMarker, mode = "route" }) {
   return (
     <MapContainer className="map" center={points[0] ? [points[0].latitude, points[0].longitude] : hondurasCenter} zoom={13}>
       <TileLayer attribution={cityTiles.attribution} url={cityTiles.url} detectRetina maxZoom={20} />
-      <ClickCollector onAddPoint={onAddPoint} />
-      <FitBounds points={points} />
+      <ClickCollector onAddPoint={(point) => (mode === "marker" ? onAddMarker?.(point) : onAddPoint?.(point))} />
+      <FitBounds points={points.length ? points : markers} />
       {points.length > 1 && <Polyline positions={points.map((p) => [p.latitude, p.longitude])} pathOptions={{ color, weight: 5 }} />}
       {points.map((point, index) => (
         <Marker key={`${point.latitude}-${point.longitude}-${index}`} position={[point.latitude, point.longitude]} icon={markerIcon}>
           <Popup>
             Punto {index + 1}
             <button className="link-button" type="button" onClick={() => onRemovePoint?.(index)}>Quitar</button>
+          </Popup>
+        </Marker>
+      ))}
+      {markers.map((marker, index) => (
+        <Marker key={`marker-${marker.latitude}-${marker.longitude}-${index}`} position={[marker.latitude, marker.longitude]} icon={routeMarkerIcon}>
+          <Popup>
+            <strong>{marker.label}</strong>
+            <span>{marker.marker_type || "referencia"}</span>
+            <button className="link-button" type="button" onClick={() => onRemoveMarker?.(index)}>Quitar</button>
           </Popup>
         </Marker>
       ))}
@@ -75,6 +91,14 @@ export function MonitorMap({ routes = [], locations = [], tracks = [], compact =
           />
         ) : null
       )}
+      {routes.flatMap((route) => route.markers || []).map((marker, index) => (
+        <Marker key={`route-marker-${marker.id || index}`} position={[Number(marker.latitude), Number(marker.longitude)]} icon={routeMarkerIcon}>
+          <Popup>
+            <strong>{marker.label}</strong>
+            <span>{marker.marker_type || "referencia"}</span>
+          </Popup>
+        </Marker>
+      ))}
       {tracks.map((track) =>
         track.points?.length > 1 ? (
           <Polyline

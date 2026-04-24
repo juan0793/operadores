@@ -13,6 +13,7 @@ create table if not exists users (
 create table if not exists field_routes (
   id bigint primary key auto_increment,
   name varchar(180) not null,
+  neighborhood varchar(140),
   description text,
   color varchar(20) not null default '#2563eb',
   status enum('draft', 'assigned', 'in_progress', 'completed', 'cancelled') not null default 'draft',
@@ -23,6 +24,19 @@ create table if not exists field_routes (
   created_at timestamp not null default current_timestamp,
   updated_at timestamp not null default current_timestamp on update current_timestamp,
   constraint fk_field_routes_created_by foreign key (created_by) references users(id)
+);
+
+create table if not exists route_markers (
+  id bigint primary key auto_increment,
+  route_id bigint not null,
+  label varchar(140) not null,
+  marker_type enum('referencia', 'inicio', 'fin', 'parada', 'punto_critico') not null default 'referencia',
+  latitude decimal(10, 7) not null,
+  longitude decimal(10, 7) not null,
+  notes text,
+  created_at timestamp not null default current_timestamp,
+  key idx_route_markers_route (route_id),
+  constraint fk_route_markers_route foreign key (route_id) references field_routes(id) on delete cascade
 );
 
 create table if not exists route_points (

@@ -6,11 +6,13 @@ import { MonitorMap, RouteEditorMap } from "./components/MapViews.jsx";
 
 const emptyRoute = {
   name: "",
+  neighborhood: "",
   description: "",
   color: "#2563eb",
   status: "draft",
   is_public: true,
   points: [],
+  markers: [],
 };
 
 function statusLabel(status) {
@@ -118,6 +120,8 @@ function AdminDashboard({ user }) {
   const [warnings, setWarnings] = useState([]);
   const [summary, setSummary] = useState(null);
   const [form, setForm] = useState(emptyRoute);
+  const [mapMode, setMapMode] = useState("route");
+  const [markerDraft, setMarkerDraft] = useState({ label: "", marker_type: "referencia" });
   const [selectedRoute, setSelectedRoute] = useState("");
   const [selectedOperator, setSelectedOperator] = useState("");
 
@@ -206,15 +210,38 @@ function AdminDashboard({ user }) {
         <div className="panel-title"><MapPin /><h2>Crear ruta</h2></div>
         <form className="route-form" onSubmit={saveRoute}>
           <label>Nombre<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></label>
+          <label>Barrio o colonia<input value={form.neighborhood} onChange={(e) => setForm({ ...form, neighborhood: e.target.value })} placeholder="Ej. Barrio El Centro" /></label>
           <label>Color<input type="color" value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} /></label>
           <label className="span-2">Descripcion<textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
           <label className="check"><input type="checkbox" checked={form.is_public} onChange={(e) => setForm({ ...form, is_public: e.target.checked })} />Visible al publico</label>
+          <div className="marker-tools span-2">
+            <div className="segmented">
+              <button type="button" className={mapMode === "route" ? "active" : ""} onClick={() => setMapMode("route")}>Trazar ruta</button>
+              <button type="button" className={mapMode === "marker" ? "active" : ""} onClick={() => setMapMode("marker")}>Agregar marcador</button>
+            </div>
+            <input value={markerDraft.label} onChange={(e) => setMarkerDraft({ ...markerDraft, label: e.target.value })} placeholder="Nombre del marcador" />
+            <select value={markerDraft.marker_type} onChange={(e) => setMarkerDraft({ ...markerDraft, marker_type: e.target.value })}>
+              <option value="referencia">Referencia</option>
+              <option value="inicio">Inicio</option>
+              <option value="fin">Fin</option>
+              <option value="parada">Parada</option>
+              <option value="punto_critico">Punto critico</option>
+            </select>
+          </div>
           <div className="span-2 editor-map">
             <RouteEditorMap
               points={form.points}
+              markers={form.markers}
               color={form.color}
+              mode={mapMode}
               onAddPoint={(point) => setForm({ ...form, points: [...form.points, point] })}
               onRemovePoint={(index) => setForm({ ...form, points: form.points.filter((_, i) => i !== index) })}
+              onAddMarker={(point) => {
+                const label = markerDraft.label.trim() || `Marcador ${form.markers.length + 1}`;
+                setForm({ ...form, markers: [...form.markers, { ...point, label, marker_type: markerDraft.marker_type }] });
+                setMarkerDraft({ ...markerDraft, label: "" });
+              }}
+              onRemoveMarker={(index) => setForm({ ...form, markers: form.markers.filter((_, i) => i !== index) })}
             />
           </div>
           <button className="primary" disabled={form.points.length < 2}><Plus size={18} />Guardar ruta</button>
@@ -430,6 +457,7 @@ function PublicScreen() {
           <article key={route.id} className="route-card">
             <span className="badge">{statusLabel(route.status)}</span>
             <h2>{route.name}</h2>
+            {route.neighborhood && <small>{route.neighborhood}</small>}
             <p>{route.description}</p>
             <div className="progress"><span style={{ width: `${route.progress_percent}%`, background: route.color }} /></div>
             <strong>{route.progress_percent}% de avance</strong>
