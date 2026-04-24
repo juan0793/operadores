@@ -415,6 +415,41 @@ textarea {
   color: #0f766e;
 }
 
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(130px, 1fr));
+  gap: 10px;
+  overflow-x: auto;
+}
+
+.day-column {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-height: 130px;
+  padding: 12px;
+  border: 1px solid #d8e0ea;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.day-column h3 {
+  font-size: 0.95rem;
+}
+
+.day-assignment {
+  display: grid;
+  gap: 2px;
+  padding: 8px;
+  border-radius: 6px;
+  color: #0f172a;
+  background: #ccfbf1;
+}
+
+.day-assignment small {
+  color: #475569;
+}
+
 .table-wrap {
   overflow-x: auto;
 }
@@ -635,6 +670,10 @@ td {
     grid-template-columns: 1fr;
   }
 
+  .week-grid {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+
   .marker-tools {
     grid-template-columns: 1fr;
   }
@@ -665,6 +704,10 @@ td {
   }
 
   .public-focus {
+    grid-template-columns: 1fr;
+  }
+
+  .week-grid {
     grid-template-columns: 1fr;
   }
 }

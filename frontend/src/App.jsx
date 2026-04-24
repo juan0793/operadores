@@ -15,6 +15,20 @@ const emptyRoute = {
   markers: [],
 };
 
+const weekDays = [
+  { value: "lunes", label: "Lunes" },
+  { value: "martes", label: "Martes" },
+  { value: "miercoles", label: "Miercoles" },
+  { value: "jueves", label: "Jueves" },
+  { value: "viernes", label: "Viernes" },
+  { value: "sabado", label: "Sabado" },
+  { value: "domingo", label: "Domingo" },
+];
+
+function dayLabel(day) {
+  return weekDays.find((item) => item.value === day)?.label || day || "Sin dia";
+}
+
 function statusLabel(status) {
   return {
     draft: "Borrador",
@@ -124,6 +138,7 @@ function AdminDashboard({ user }) {
   const [markerDraft, setMarkerDraft] = useState({ label: "", marker_type: "referencia" });
   const [selectedRoute, setSelectedRoute] = useState("");
   const [selectedOperator, setSelectedOperator] = useState("");
+  const [selectedDay, setSelectedDay] = useState("lunes");
 
   async function load() {
     const [routeList, userList, assignmentList, locationList, trackList, report, eventList] = await Promise.all([
@@ -155,6 +170,12 @@ function AdminDashboard({ user }) {
   }, []);
 
   const detailedRoutes = useMemo(() => routes.map((route) => ({ ...route, points: route.points || [] })), [routes]);
+  const assignmentsByDay = useMemo(() => {
+    return weekDays.map((day) => ({
+      ...day,
+      assignments: assignments.filter((assignment) => assignment.service_day === day.value),
+    }));
+  }, [assignments]);
 
   async function saveRoute(event) {
     event.preventDefault();
@@ -167,10 +188,11 @@ function AdminDashboard({ user }) {
     event.preventDefault();
     await apiFetch("/api/assignments", {
       method: "POST",
-      body: JSON.stringify({ route_id: Number(selectedRoute), operator_id: Number(selectedOperator) }),
+      body: JSON.stringify({ route_id: Number(selectedRoute), operator_id: Number(selectedOperator), service_day: selectedDay }),
     });
     setSelectedRoute("");
     setSelectedOperator("");
+    setSelectedDay("lunes");
     await load();
   }
 
@@ -259,6 +281,9 @@ function AdminDashboard({ user }) {
             <option value="">Seleccionar operador</option>
             {operators.map((op) => <option key={op.id} value={op.id}>{op.name}</option>)}
           </select>
+          <select value={selectedDay} onChange={(e) => setSelectedDay(e.target.value)} required>
+            {weekDays.map((day) => <option key={day.value} value={day.value}>{day.label}</option>)}
+          </select>
           <button className="primary">Asignar</button>
         </form>
       </section>
@@ -273,6 +298,25 @@ function AdminDashboard({ user }) {
             <span><strong>{summary.average_progress}%</strong> avance</span>
           </div>
         )}
+      </section>
+
+      <section className="panel wide">
+        <div className="panel-title"><ClipboardList /><h2>Programacion semanal</h2></div>
+        <div className="week-grid">
+          {assignmentsByDay.map((day) => (
+            <article className="day-column" key={day.value}>
+              <h3>{day.label}</h3>
+              {day.assignments.length === 0 ? (
+                <p className="muted">Sin operadores</p>
+              ) : day.assignments.map((assignment) => (
+                <span className="day-assignment" key={assignment.id}>
+                  <strong>{assignment.operator_name}</strong>
+                  <small>{assignment.route_name}</small>
+                </span>
+              ))}
+            </article>
+          ))}
+        </div>
       </section>
 
       <section id="monitoreo" className="panel wide">
@@ -302,12 +346,14 @@ function AdminDashboard({ user }) {
         <div className="panel-title"><ClipboardList /><h2>Historial</h2></div>
         <div className="table-wrap">
           <table>
-            <thead><tr><th>Ruta</th><th>Operador</th><th>Estado</th><th>Avance</th><th>Asignada</th><th>Demo</th></tr></thead>
+            <thead><tr><th>Ruta</th><th>Barrio</th><th>Operador</th><th>Dia</th><th>Estado</th><th>Avance</th><th>Asignada</th><th>Demo</th></tr></thead>
             <tbody>
               {assignments.map((item) => (
                 <tr key={item.id}>
                   <td><button className="link-button" onClick={() => openRoute({ id: item.route_id })}>{item.route_name}</button></td>
+                  <td>{item.neighborhood || "-"}</td>
                   <td>{item.operator_name}</td>
+                  <td>{dayLabel(item.service_day)}</td>
                   <td><span className="badge">{statusLabel(item.status)}</span></td>
                   <td>{Number(item.progress_percent)}%</td>
                   <td>{new Date(item.assigned_at).toLocaleString()}</td>
@@ -391,6 +437,7 @@ function OperatorDashboard({ user }) {
           <div className="operator-card">
             <span className="badge">{statusLabel(active.status)}</span>
             <h3>{active.route_name}</h3>
+            <p>{dayLabel(active.service_day)}</p>
             <div className="progress"><span style={{ width: `${Number(active.progress_percent)}%` }} /></div>
             <p>{Number(active.progress_percent)}% reportado</p>
             <button className="primary big" onClick={startGps} disabled={watching}><Play />{watching ? "GPS activo" : "Iniciar seguimiento"}</button>
@@ -458,6 +505,7 @@ function PublicScreen() {
             <span className="badge">{statusLabel(route.status)}</span>
             <h2>{route.name}</h2>
             {route.neighborhood && <small>{route.neighborhood}</small>}
+            {route.service_day && <small>{dayLabel(route.service_day)}</small>}
             <p>{route.description}</p>
             <div className="progress"><span style={{ width: `${route.progress_percent}%`, background: route.color }} /></div>
             <strong>{route.progress_percent}% de avance</strong>

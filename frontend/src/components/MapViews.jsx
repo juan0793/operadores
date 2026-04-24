@@ -24,7 +24,11 @@ const routeMarkerIcon = new L.DivIcon({
   iconAnchor: [13, 13],
 });
 
-const hondurasCenter = [14.0818, -87.2068];
+const cholutecaCenter = [13.303, -87.1907];
+const cholutecaBounds = [
+  [13.255, -87.245],
+  [13.355, -87.135],
+];
 const cityTiles = {
   url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
   attribution: '&copy; OpenStreetMap &copy; CARTO',
@@ -33,7 +37,11 @@ const cityTiles = {
 function FitBounds({ points }) {
   const map = useMap();
   useEffect(() => {
-    if (points.length > 1) map.fitBounds(points.map((p) => [p.latitude, p.longitude]), { padding: [28, 28] });
+    if (points.length > 1) {
+      map.fitBounds(points.map((p) => [p.latitude, p.longitude]), { padding: [28, 28] });
+    } else {
+      map.fitBounds(cholutecaBounds, { padding: [18, 18] });
+    }
   }, [map, points]);
   return null;
 }
@@ -49,7 +57,7 @@ function ClickCollector({ onAddPoint }) {
 
 export function RouteEditorMap({ points, markers = [], color = "#2563eb", onAddPoint, onRemovePoint, onAddMarker, onRemoveMarker, mode = "route" }) {
   return (
-    <MapContainer className="map" center={points[0] ? [points[0].latitude, points[0].longitude] : hondurasCenter} zoom={13}>
+    <MapContainer className="map" center={points[0] ? [points[0].latitude, points[0].longitude] : cholutecaCenter} zoom={15} maxBounds={cholutecaBounds}>
       <TileLayer attribution={cityTiles.attribution} url={cityTiles.url} detectRetina maxZoom={20} />
       <ClickCollector onAddPoint={(point) => (mode === "marker" ? onAddMarker?.(point) : onAddPoint?.(point))} />
       <FitBounds points={points.length ? points : markers} />
@@ -79,7 +87,7 @@ export function MonitorMap({ routes = [], locations = [], tracks = [], compact =
   const routePoints = routes.flatMap((route) => route.points || []);
   const trackPoints = tracks.flatMap((track) => track.points || []);
   return (
-    <MapContainer className={`map ${compact ? "map-compact" : "map-large"}`} center={hondurasCenter} zoom={13}>
+    <MapContainer className={`map ${compact ? "map-compact" : "map-large"}`} center={cholutecaCenter} zoom={14} maxBounds={cholutecaBounds}>
       <TileLayer attribution={cityTiles.attribution} url={cityTiles.url} detectRetina maxZoom={20} />
       <FitBounds points={routePoints.length ? routePoints : (trackPoints.length ? trackPoints : locations)} />
       {routes.map((route) =>

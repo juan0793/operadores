@@ -28,7 +28,7 @@ router.get("/summary", async (_req, res, next) => {
 router.get("/history", async (_req, res, next) => {
   try {
     const result = await query(
-      `select a.id, r.name as route_name, u.name as operator_name, a.status,
+      `select a.id, r.name as route_name, r.neighborhood, u.name as operator_name, a.service_day, a.status,
               a.progress_percent, a.assigned_at, a.started_at, a.completed_at
        from route_assignments a
        join field_routes r on r.id = a.route_id
