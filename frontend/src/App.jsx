@@ -610,6 +610,7 @@ function OperatorDashboard({ user }) {
 
 function PublicScreen() {
   const [routes, setRoutes] = useState([]);
+  const [expandedRoute, setExpandedRoute] = useState(null);
 
   async function load() {
     const list = await apiFetch("/api/public/routes", { headers: {} });
@@ -625,6 +626,14 @@ function PublicScreen() {
       socket.disconnect();
       clearInterval(timer);
     };
+  }, []);
+
+  useEffect(() => {
+    function closeOnEscape(event) {
+      if (event.key === "Escape") setExpandedRoute(null);
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
   }, []);
 
   const locations = routes.filter((route) => route.latitude && route.longitude);
@@ -644,7 +653,16 @@ function PublicScreen() {
         {focusRoutes.map((route) => {
           const routeLocation = route.latitude && route.longitude ? [route] : [];
           return (
-            <article className="public-focus-panel" key={`focus-${route.id}`}>
+            <article
+              className="public-focus-panel"
+              key={`focus-${route.id}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => setExpandedRoute(route)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") setExpandedRoute(route);
+              }}
+            >
               <div className="focus-head">
                 <div>
                   <span className="eyebrow">Pantalla {focusRoutes.indexOf(route) + 1}</span>
@@ -653,6 +671,7 @@ function PublicScreen() {
                 <strong>{route.progress_percent}%</strong>
               </div>
               <MonitorMap routes={[route]} locations={routeLocation} tracks={[]} compact />
+              <span className="expand-hint">Clic para pantalla completa</span>
             </article>
           );
         })}
@@ -671,6 +690,32 @@ function PublicScreen() {
           </article>
         ))}
       </section>
+      {expandedRoute && (
+        <section className="fullscreen-route" role="dialog" aria-modal="true">
+          <header className="fullscreen-route-header">
+            <div>
+              <span className="eyebrow">Pantalla completa</span>
+              <h2>{expandedRoute.name}</h2>
+              <p>
+                {[expandedRoute.neighborhood, expandedRoute.vehicle_name, expandedRoute.service_day && dayLabel(expandedRoute.service_day)]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            </div>
+            <div className="fullscreen-route-stats">
+              <strong>{expandedRoute.progress_percent}%</strong>
+              <button type="button" onClick={() => setExpandedRoute(null)}>Cerrar</button>
+            </div>
+          </header>
+          <div className="fullscreen-route-map">
+            <MonitorMap
+              routes={[expandedRoute]}
+              locations={expandedRoute.latitude && expandedRoute.longitude ? [expandedRoute] : []}
+              tracks={[]}
+            />
+          </div>
+        </section>
+      )}
     </main>
   );
 }
