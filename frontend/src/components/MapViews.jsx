@@ -30,9 +30,24 @@ const cholutecaBounds = [
   [13.355, -87.135],
 ];
 const cityTiles = {
-  url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-  attribution: '&copy; OpenStreetMap &copy; CARTO',
+  imageryUrl: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+  labelsUrl: "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+  attribution: "Tiles &copy; Esri, Maxar, Earthstar Geographics, and the GIS User Community",
 };
+
+function MapResizeFix() {
+  const map = useMap();
+  useEffect(() => {
+    const resize = () => map.invalidateSize();
+    const timers = [80, 300, 900].map((delay) => window.setTimeout(resize, delay));
+    window.addEventListener("resize", resize);
+    return () => {
+      timers.forEach(window.clearTimeout);
+      window.removeEventListener("resize", resize);
+    };
+  }, [map]);
+  return null;
+}
 
 function FitBounds({ points }) {
   const map = useMap();
@@ -58,7 +73,9 @@ function ClickCollector({ onAddPoint }) {
 export function RouteEditorMap({ points, markers = [], color = "#2563eb", onAddPoint, onRemovePoint, onAddMarker, onRemoveMarker, mode = "route" }) {
   return (
     <MapContainer className="map" center={points[0] ? [points[0].latitude, points[0].longitude] : cholutecaCenter} zoom={15} maxBounds={cholutecaBounds}>
-      <TileLayer attribution={cityTiles.attribution} url={cityTiles.url} detectRetina maxZoom={20} />
+      <TileLayer attribution={cityTiles.attribution} url={cityTiles.imageryUrl} maxZoom={20} />
+      <TileLayer url={cityTiles.labelsUrl} maxZoom={20} pane="overlayPane" />
+      <MapResizeFix />
       <ClickCollector onAddPoint={(point) => (mode === "marker" ? onAddMarker?.(point) : onAddPoint?.(point))} />
       <FitBounds points={points.length ? points : markers} />
       {points.length > 1 && <Polyline positions={points.map((p) => [p.latitude, p.longitude])} pathOptions={{ color, weight: 5 }} />}
@@ -88,7 +105,9 @@ export function MonitorMap({ routes = [], locations = [], tracks = [], compact =
   const trackPoints = tracks.flatMap((track) => track.points || []);
   return (
     <MapContainer className={`map ${compact ? "map-compact" : "map-large"}`} center={cholutecaCenter} zoom={14} maxBounds={cholutecaBounds}>
-      <TileLayer attribution={cityTiles.attribution} url={cityTiles.url} detectRetina maxZoom={20} />
+      <TileLayer attribution={cityTiles.attribution} url={cityTiles.imageryUrl} maxZoom={20} />
+      <TileLayer url={cityTiles.labelsUrl} maxZoom={20} pane="overlayPane" />
+      <MapResizeFix />
       <FitBounds points={routePoints.length ? routePoints : (trackPoints.length ? trackPoints : locations)} />
       {routes.map((route) =>
         route.points?.length > 1 ? (
