@@ -127,10 +127,10 @@ router.get("/latest", async (_req, res, next) => {
        join users u on u.id = ol.operator_id
        join field_routes r on r.id = ol.route_id
        join (
-         select assignment_id, max(recorded_at) as recorded_at
+         select assignment_id, max(id) as id
          from operator_locations
          group by assignment_id
-       ) latest on latest.assignment_id = ol.assignment_id and latest.recorded_at = ol.recorded_at
+       ) latest on latest.assignment_id = ol.assignment_id and latest.id = ol.id
        order by ol.recorded_at desc`
     );
     res.json(result.rows);

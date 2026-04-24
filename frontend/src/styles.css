@@ -294,6 +294,10 @@ textarea {
   min-height: 420px;
 }
 
+.map-compact {
+  min-height: 240px;
+}
+
 .map {
   width: 100%;
   height: 100%;
@@ -466,6 +470,42 @@ td {
   margin-top: 16px;
 }
 
+.public-focus {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.public-focus-panel {
+  display: grid;
+  grid-template-rows: auto minmax(220px, 1fr);
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.focus-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.focus-head h2 {
+  margin: 2px 0 0;
+  font-size: 1rem;
+  line-height: 1.15;
+}
+
+.focus-head strong {
+  color: #5eead4;
+  font-size: 1.2rem;
+}
+
 .route-card {
   display: grid;
   gap: 10px;
@@ -542,6 +582,10 @@ td {
     flex-direction: column;
   }
 
+  .public-focus {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .route-form {
     grid-template-columns: 1fr;
   }
@@ -569,5 +613,9 @@ td {
   .editor-map,
   .public-map {
     min-height: 320px;
+  }
+
+  .public-focus {
+    grid-template-columns: 1fr;
   }
 }

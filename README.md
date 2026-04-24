@@ -71,6 +71,8 @@ Archivos disponibles:
   - acceso en `/public`,
   - muestra solo rutas marcadas como publicas,
   - oculta correo, telefono y datos internos,
+  - usa mapa urbano de mayor nitidez,
+  - muestra un mapa general y hasta 5 paneles simultaneos,
   - actualiza por Socket.IO y por respaldo cada 30 segundos.
 
 ## Configuracion local
@@ -154,6 +156,7 @@ Modo real:
 3. Entrar desde un celular como `operador@rutas.local`.
 4. Presionar `Iniciar seguimiento` y aceptar permisos de ubicacion.
 5. En el panel de administrador se vera la linea oficial, el carrito y el rastro punteado del recorrido.
+6. En la pantalla publica se vera un solo carrito por ruta/operador, no un carrito por cada punto GPS.
 
 Modo demo:
 

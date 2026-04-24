@@ -396,6 +396,7 @@ function PublicScreen() {
   }, []);
 
   const locations = routes.filter((route) => route.latitude && route.longitude);
+  const focusRoutes = routes.slice(0, 5);
 
   return (
     <main className="public-screen">
@@ -407,6 +408,23 @@ function PublicScreen() {
         <span>{new Date().toLocaleDateString()}</span>
       </header>
       <section className="public-map"><MonitorMap routes={routes} locations={locations} tracks={[]} /></section>
+      <section className="public-focus">
+        {focusRoutes.map((route) => {
+          const routeLocation = route.latitude && route.longitude ? [route] : [];
+          return (
+            <article className="public-focus-panel" key={`focus-${route.id}`}>
+              <div className="focus-head">
+                <div>
+                  <span className="eyebrow">Pantalla {focusRoutes.indexOf(route) + 1}</span>
+                  <h2>{route.name}</h2>
+                </div>
+                <strong>{route.progress_percent}%</strong>
+              </div>
+              <MonitorMap routes={[route]} locations={routeLocation} tracks={[]} compact />
+            </article>
+          );
+        })}
+      </section>
       <section className="public-list">
         {routes.map((route) => (
           <article key={route.id} className="route-card">

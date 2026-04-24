@@ -18,6 +18,10 @@ const vehicleIcon = new L.DivIcon({
 });
 
 const hondurasCenter = [14.0818, -87.2068];
+const cityTiles = {
+  url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+  attribution: '&copy; OpenStreetMap &copy; CARTO',
+};
 
 function FitBounds({ points }) {
   const map = useMap();
@@ -39,7 +43,7 @@ function ClickCollector({ onAddPoint }) {
 export function RouteEditorMap({ points, color = "#2563eb", onAddPoint, onRemovePoint }) {
   return (
     <MapContainer className="map" center={points[0] ? [points[0].latitude, points[0].longitude] : hondurasCenter} zoom={13}>
-      <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <TileLayer attribution={cityTiles.attribution} url={cityTiles.url} detectRetina maxZoom={20} />
       <ClickCollector onAddPoint={onAddPoint} />
       <FitBounds points={points} />
       {points.length > 1 && <Polyline positions={points.map((p) => [p.latitude, p.longitude])} pathOptions={{ color, weight: 5 }} />}
@@ -55,12 +59,12 @@ export function RouteEditorMap({ points, color = "#2563eb", onAddPoint, onRemove
   );
 }
 
-export function MonitorMap({ routes = [], locations = [], tracks = [] }) {
+export function MonitorMap({ routes = [], locations = [], tracks = [], compact = false }) {
   const routePoints = routes.flatMap((route) => route.points || []);
   const trackPoints = tracks.flatMap((track) => track.points || []);
   return (
-    <MapContainer className="map map-large" center={hondurasCenter} zoom={12}>
-      <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+    <MapContainer className={`map ${compact ? "map-compact" : "map-large"}`} center={hondurasCenter} zoom={13}>
+      <TileLayer attribution={cityTiles.attribution} url={cityTiles.url} detectRetina maxZoom={20} />
       <FitBounds points={routePoints.length ? routePoints : (trackPoints.length ? trackPoints : locations)} />
       {routes.map((route) =>
         route.points?.length > 1 ? (

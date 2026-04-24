@@ -30,10 +30,10 @@ router.get("/routes", async (_req, res, next) => {
          select ol.route_id, ol.latitude, ol.longitude, ol.recorded_at
          from operator_locations ol
          join (
-           select route_id, max(recorded_at) as recorded_at
+           select route_id, max(id) as id
            from operator_locations
            group by route_id
-         ) mx on mx.route_id = ol.route_id and mx.recorded_at = ol.recorded_at
+         ) mx on mx.route_id = ol.route_id and mx.id = ol.id
        ) latest on latest.route_id = r.id
        where r.is_public = true
        group by r.id, a.progress_percent, a.started_at, a.completed_at, u.name,
