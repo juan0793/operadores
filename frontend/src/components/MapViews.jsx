@@ -12,9 +12,9 @@ const markerIcon = new L.Icon({
 
 const vehicleIcon = new L.DivIcon({
   className: "vehicle-marker",
-  html: '<span class="vehicle-body"><span class="vehicle-window"></span></span>',
-  iconSize: [34, 34],
-  iconAnchor: [17, 17],
+  html: '<span class="vehicle-label">Aguas de Choluteca</span><span class="vehicle-body"><span class="vehicle-window"></span><span class="vehicle-stripe"></span></span>',
+  iconSize: [128, 58],
+  iconAnchor: [64, 38],
 });
 
 const routeMarkerIcon = new L.DivIcon({
