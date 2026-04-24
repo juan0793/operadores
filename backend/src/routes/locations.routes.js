@@ -139,4 +139,42 @@ router.get("/latest", async (_req, res, next) => {
   }
 });
 
+router.get("/tracks", async (_req, res, next) => {
+  try {
+    const result = await query(
+      `select ol.assignment_id, ol.route_id, ol.operator_id, ol.latitude, ol.longitude,
+              ol.recorded_at, u.name as operator_name, r.name as route_name, r.color
+       from operator_locations ol
+       join users u on u.id = ol.operator_id
+       join field_routes r on r.id = ol.route_id
+       where ol.recorded_at >= date_sub(now(), interval 12 hour)
+       order by ol.assignment_id, ol.recorded_at`
+    );
+
+    const tracks = new Map();
+    for (const row of result.rows) {
+      if (!tracks.has(row.assignment_id)) {
+        tracks.set(row.assignment_id, {
+          assignment_id: row.assignment_id,
+          route_id: row.route_id,
+          operator_id: row.operator_id,
+          operator_name: row.operator_name,
+          route_name: row.route_name,
+          color: row.color,
+          points: [],
+        });
+      }
+      tracks.get(row.assignment_id).points.push({
+        latitude: Number(row.latitude),
+        longitude: Number(row.longitude),
+        recorded_at: row.recorded_at,
+      });
+    }
+
+    res.json([...tracks.values()]);
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

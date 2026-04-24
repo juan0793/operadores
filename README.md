@@ -53,6 +53,8 @@ Archivos disponibles:
   - listar rutas,
   - asignar rutas a operadores,
   - monitorear ubicaciones GPS en tiempo real,
+  - ver el carrito del operador y el rastro recorrido,
+  - simular un recorrido para demostraciones,
   - ver resumen e historial.
 - Operador:
   - ver rutas asignadas,
@@ -142,6 +144,23 @@ Pantalla publica: http://localhost:5174/public
 Backend: http://localhost:4001
 Health: http://localhost:4001/health
 ```
+
+## Como ver el carrito en movimiento
+
+Modo real:
+
+1. Entrar como administrador y crear una ruta con varios puntos.
+2. Asignar la ruta al operador.
+3. Entrar desde un celular como `operador@rutas.local`.
+4. Presionar `Iniciar seguimiento` y aceptar permisos de ubicacion.
+5. En el panel de administrador se vera la linea oficial, el carrito y el rastro punteado del recorrido.
+
+Modo demo:
+
+1. Entrar como administrador.
+2. Ir a `Historial`.
+3. Presionar `Simular recorrido` en una asignacion.
+4. El sistema enviara ubicaciones de prueba sobre la ruta para ver el carrito moverse.
 
 ## Despliegue en Railway
 

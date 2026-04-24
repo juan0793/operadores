@@ -41,7 +41,24 @@ router.get("/", async (req, res, next) => {
        order by r.created_at desc`,
       [onlyMine, req.user.id]
     );
-    res.json(result.rows);
+    const routeIds = [...new Set(result.rows.map((route) => route.id))];
+    const pointsByRoute = new Map(routeIds.map((id) => [id, []]));
+
+    if (routeIds.length > 0) {
+      const placeholders = routeIds.map(() => "?").join(",");
+      const points = await query(
+        `select id, route_id, latitude, longitude, sequence, instruction
+         from route_points
+         where route_id in (${placeholders})
+         order by route_id, sequence`,
+        routeIds
+      );
+      for (const point of points.rows) {
+        pointsByRoute.get(point.route_id)?.push(point);
+      }
+    }
+
+    res.json(result.rows.map((route) => ({ ...route, points: pointsByRoute.get(route.id) || [] })));
   } catch (error) {
     next(error);
   }

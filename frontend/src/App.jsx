@@ -114,6 +114,7 @@ function AdminDashboard({ user }) {
   const [operators, setOperators] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [locations, setLocations] = useState([]);
+  const [tracks, setTracks] = useState([]);
   const [warnings, setWarnings] = useState([]);
   const [summary, setSummary] = useState(null);
   const [form, setForm] = useState(emptyRoute);
@@ -121,11 +122,12 @@ function AdminDashboard({ user }) {
   const [selectedOperator, setSelectedOperator] = useState("");
 
   async function load() {
-    const [routeList, userList, assignmentList, locationList, report, eventList] = await Promise.all([
+    const [routeList, userList, assignmentList, locationList, trackList, report, eventList] = await Promise.all([
       apiFetch("/api/routes"),
       apiFetch("/api/users"),
       apiFetch("/api/assignments"),
       apiFetch("/api/locations/latest"),
+      apiFetch("/api/locations/tracks"),
       apiFetch("/api/reports/summary"),
       apiFetch("/api/reports/events"),
     ]);
@@ -133,6 +135,7 @@ function AdminDashboard({ user }) {
     setOperators(userList.filter((item) => item.role === "operador"));
     setAssignments(assignmentList);
     setLocations(locationList);
+    setTracks(trackList);
     setSummary(report);
     setWarnings(eventList.filter((event) => event.event_type === "route_deviation"));
   }
@@ -170,6 +173,31 @@ function AdminDashboard({ user }) {
   async function openRoute(route) {
     const detail = await apiFetch(`/api/routes/${route.id}`);
     setRoutes((current) => current.map((item) => (item.id === route.id ? detail : item)));
+  }
+
+  async function simulateRoute(assignment) {
+    const route = await apiFetch(`/api/routes/${assignment.route_id}`);
+    const points = route.points || [];
+    if (points.length < 2) return;
+
+    for (let index = 0; index < points.length - 1; index += 1) {
+      const start = points[index];
+      const end = points[index + 1];
+      for (let step = 0; step <= 8; step += 1) {
+        const t = step / 8;
+        await apiFetch("/api/locations", {
+          method: "POST",
+          body: JSON.stringify({
+            assignment_id: Number(assignment.id),
+            latitude: Number(start.latitude) + (Number(end.latitude) - Number(start.latitude)) * t,
+            longitude: Number(start.longitude) + (Number(end.longitude) - Number(start.longitude)) * t,
+            accuracy: 8,
+          }),
+        });
+        await new Promise((resolve) => setTimeout(resolve, 550));
+      }
+    }
+    await load();
   }
 
   return (
@@ -222,7 +250,7 @@ function AdminDashboard({ user }) {
 
       <section id="monitoreo" className="panel wide">
         <div className="panel-title"><Radio /><h2>Monitoreo en tiempo real</h2></div>
-        <MonitorMap routes={detailedRoutes} locations={locations} />
+        <MonitorMap routes={detailedRoutes} locations={locations} tracks={tracks} />
       </section>
 
       <section className="panel wide">
@@ -247,7 +275,7 @@ function AdminDashboard({ user }) {
         <div className="panel-title"><ClipboardList /><h2>Historial</h2></div>
         <div className="table-wrap">
           <table>
-            <thead><tr><th>Ruta</th><th>Operador</th><th>Estado</th><th>Avance</th><th>Asignada</th></tr></thead>
+            <thead><tr><th>Ruta</th><th>Operador</th><th>Estado</th><th>Avance</th><th>Asignada</th><th>Demo</th></tr></thead>
             <tbody>
               {assignments.map((item) => (
                 <tr key={item.id}>
@@ -256,6 +284,7 @@ function AdminDashboard({ user }) {
                   <td><span className="badge">{statusLabel(item.status)}</span></td>
                   <td>{Number(item.progress_percent)}%</td>
                   <td>{new Date(item.assigned_at).toLocaleString()}</td>
+                  <td><button className="link-button" type="button" onClick={() => simulateRoute(item)}>Simular recorrido</button></td>
                 </tr>
               ))}
             </tbody>
@@ -377,7 +406,7 @@ function PublicScreen() {
         </div>
         <span>{new Date().toLocaleDateString()}</span>
       </header>
-      <section className="public-map"><MonitorMap routes={routes} locations={locations} /></section>
+      <section className="public-map"><MonitorMap routes={routes} locations={locations} tracks={[]} /></section>
       <section className="public-list">
         {routes.map((route) => (
           <article key={route.id} className="route-card">

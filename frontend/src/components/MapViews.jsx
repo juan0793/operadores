@@ -10,6 +10,13 @@ const markerIcon = new L.Icon({
   iconAnchor: [12, 41],
 });
 
+const vehicleIcon = new L.DivIcon({
+  className: "vehicle-marker",
+  html: '<span class="vehicle-body"><span class="vehicle-window"></span></span>',
+  iconSize: [34, 34],
+  iconAnchor: [17, 17],
+});
+
 const hondurasCenter = [14.0818, -87.2068];
 
 function FitBounds({ points }) {
@@ -48,23 +55,33 @@ export function RouteEditorMap({ points, color = "#2563eb", onAddPoint, onRemove
   );
 }
 
-export function MonitorMap({ routes = [], locations = [] }) {
+export function MonitorMap({ routes = [], locations = [], tracks = [] }) {
   const routePoints = routes.flatMap((route) => route.points || []);
+  const trackPoints = tracks.flatMap((track) => track.points || []);
   return (
     <MapContainer className="map map-large" center={hondurasCenter} zoom={12}>
       <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      <FitBounds points={routePoints.length ? routePoints : locations} />
+      <FitBounds points={routePoints.length ? routePoints : (trackPoints.length ? trackPoints : locations)} />
       {routes.map((route) =>
         route.points?.length > 1 ? (
           <Polyline
-            key={route.id}
+            key={`route-${route.id}`}
             positions={route.points.map((p) => [p.latitude, p.longitude])}
             pathOptions={{ color: route.color || "#2563eb", weight: 5 }}
           />
         ) : null
       )}
+      {tracks.map((track) =>
+        track.points?.length > 1 ? (
+          <Polyline
+            key={`track-${track.assignment_id}`}
+            positions={track.points.map((p) => [p.latitude, p.longitude])}
+            pathOptions={{ color: track.color || "#f97316", weight: 4, dashArray: "8 8" }}
+          />
+        ) : null
+      )}
       {locations.map((loc) => (
-        <Marker key={`${loc.assignment_id}-${loc.recorded_at || loc.last_location_at}`} position={[Number(loc.latitude), Number(loc.longitude)]} icon={markerIcon}>
+        <Marker key={`${loc.assignment_id}-${loc.recorded_at || loc.last_location_at}`} position={[Number(loc.latitude), Number(loc.longitude)]} icon={vehicleIcon}>
           <Popup>
             <strong>{loc.operator_name || "Operador"}</strong>
             <span>{loc.route_name || loc.name}</span>

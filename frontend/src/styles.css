@@ -303,6 +303,51 @@ textarea {
   border: 1px solid #cbd5e1;
 }
 
+.vehicle-marker {
+  display: grid;
+  place-items: center;
+}
+
+.vehicle-body {
+  position: relative;
+  display: block;
+  width: 30px;
+  height: 20px;
+  border: 3px solid white;
+  border-radius: 8px 8px 5px 5px;
+  background: #dc2626;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.35);
+}
+
+.vehicle-body::before,
+.vehicle-body::after {
+  content: "";
+  position: absolute;
+  bottom: -7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #172033;
+}
+
+.vehicle-body::before {
+  left: 4px;
+}
+
+.vehicle-body::after {
+  right: 4px;
+}
+
+.vehicle-window {
+  position: absolute;
+  top: 3px;
+  left: 7px;
+  width: 12px;
+  height: 6px;
+  border-radius: 3px;
+  background: #bae6fd;
+}
+
 .stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
