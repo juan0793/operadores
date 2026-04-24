@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1100" viewBox="0 0 1600 1100" role="img" aria-labelledby="title desc">
+  <title id="title">Diagrama de base de datos del Sistema Rutas Operadores</title>
+  <desc id="desc">Diagrama entidad relacion con usuarios, rutas, puntos, asignaciones, ubicaciones y eventos.</desc>
+  <defs>
+    <style>
+      .bg { fill: #eef2f7; }
+      .card { fill: #ffffff; stroke: #cbd5e1; stroke-width: 2; rx: 8; }
+      .head { fill: #0f766e; }
+      .headText { fill: #ffffff; font: 700 19px Arial, Helvetica, sans-serif; }
+      .field { fill: #172033; font: 15px Arial, Helvetica, sans-serif; }
+      .key { fill: #0f766e; font: 700 15px Arial, Helvetica, sans-serif; }
+      .rel { stroke: #475569; stroke-width: 2.4; fill: none; marker-end: url(#arrow); }
+      .label { fill: #334155; font: 13px Arial, Helvetica, sans-serif; }
+      .title { fill: #172033; font: 800 34px Arial, Helvetica, sans-serif; }
+      .subtitle { fill: #526173; font: 17px Arial, Helvetica, sans-serif; }
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#475569" />
+    </marker>
+  </defs>
+
+  <rect class="bg" width="1600" height="1100"/>
+  <text class="title" x="56" y="58">Sistema Rutas Operadores - Diagrama BD</text>
+  <text class="subtitle" x="56" y="88">MySQL/MariaDB: usuarios, rutas, puntos, asignaciones, GPS e historial de eventos</text>
+
+  <g id="users" transform="translate(70 150)">
+    <rect class="card" width="310" height="310"/>
+    <rect class="head" width="310" height="48" rx="8"/>
+    <text class="headText" x="18" y="31">users</text>
+    <text class="key" x="18" y="76">PK id bigint</text>
+    <text class="field" x="18" y="104">name varchar(140)</text>
+    <text class="key" x="18" y="132">UK email varchar(180)</text>
+    <text class="field" x="18" y="160">password_hash text</text>
+    <text class="field" x="18" y="188">role enum</text>
+    <text class="field" x="18" y="216">phone varchar(40)</text>
+    <text class="field" x="18" y="244">is_active boolean</text>
+    <text class="field" x="18" y="272">created_at timestamp</text>
+    <text class="field" x="18" y="300">updated_at timestamp</text>
+  </g>
+
+  <g id="field-routes" transform="translate(640 130)">
+    <rect class="card" width="330" height="365"/>
+    <rect class="head" width="330" height="48" rx="8"/>
+    <text class="headText" x="18" y="31">field_routes</text>
+    <text class="key" x="18" y="76">PK id bigint</text>
+    <text class="field" x="18" y="104">name varchar(180)</text>
+    <text class="field" x="18" y="132">description text</text>
+    <text class="field" x="18" y="160">color varchar(20)</text>
+    <text class="field" x="18" y="188">status enum</text>
+    <text class="field" x="18" y="216">starts_at timestamp</text>
+    <text class="field" x="18" y="244">ends_at timestamp</text>
+    <text class="field" x="18" y="272">is_public boolean</text>
+    <text class="key" x="18" y="300">FK created_by bigint</text>
+    <text class="field" x="18" y="328">created_at timestamp</text>
+    <text class="field" x="18" y="356">updated_at timestamp</text>
+  </g>
+
+  <g id="route-points" transform="translate(1210 120)">
+    <rect class="card" width="320" height="255"/>
+    <rect class="head" width="320" height="48" rx="8"/>
+    <text class="headText" x="18" y="31">route_points</text>
+    <text class="key" x="18" y="76">PK id bigint</text>
+    <text class="key" x="18" y="104">FK route_id bigint</text>
+    <text class="field" x="18" y="132">latitude decimal(10,7)</text>
+    <text class="field" x="18" y="160">longitude decimal(10,7)</text>
+    <text class="field" x="18" y="188">sequence int</text>
+    <text class="field" x="18" y="216">instruction text</text>
+    <text class="field" x="18" y="244">created_at timestamp</text>
+  </g>
+
+  <g id="assignments" transform="translate(615 640)">
+    <rect class="card" width="370" height="335"/>
+    <rect class="head" width="370" height="48" rx="8"/>
+    <text class="headText" x="18" y="31">route_assignments</text>
+    <text class="key" x="18" y="76">PK id bigint</text>
+    <text class="key" x="18" y="104">FK route_id bigint</text>
+    <text class="key" x="18" y="132">FK operator_id bigint</text>
+    <text class="key" x="18" y="160">FK assigned_by bigint</text>
+    <text class="field" x="18" y="188">status enum</text>
+    <text class="field" x="18" y="216">progress_percent decimal(5,2)</text>
+    <text class="field" x="18" y="244">notes text</text>
+    <text class="field" x="18" y="272">assigned_at timestamp</text>
+    <text class="field" x="18" y="300">started_at timestamp</text>
+    <text class="field" x="18" y="328">completed_at timestamp</text>
+  </g>
+
+  <g id="locations" transform="translate(1160 570)">
+    <rect class="card" width="370" height="365"/>
+    <rect class="head" width="370" height="48" rx="8"/>
+    <text class="headText" x="18" y="31">operator_locations</text>
+    <text class="key" x="18" y="76">PK id bigint</text>
+    <text class="key" x="18" y="104">FK assignment_id bigint</text>
+    <text class="key" x="18" y="132">FK operator_id bigint</text>
+    <text class="key" x="18" y="160">FK route_id bigint</text>
+    <text class="field" x="18" y="188">latitude decimal(10,7)</text>
+    <text class="field" x="18" y="216">longitude decimal(10,7)</text>
+    <text class="field" x="18" y="244">accuracy decimal(10,2)</text>
+    <text class="field" x="18" y="272">speed decimal(10,2)</text>
+    <text class="field" x="18" y="300">heading decimal(10,2)</text>
+    <text class="field" x="18" y="328">battery_level decimal(5,2)</text>
+    <text class="field" x="18" y="356">recorded_at timestamp</text>
+  </g>
+
+  <g id="events" transform="translate(70 650)">
+    <rect class="card" width="340" height="300"/>
+    <rect class="head" width="340" height="48" rx="8"/>
+    <text class="headText" x="18" y="31">route_events</text>
+    <text class="key" x="18" y="76">PK id bigint</text>
+    <text class="key" x="18" y="104">FK assignment_id bigint</text>
+    <text class="key" x="18" y="132">FK route_id bigint</text>
+    <text class="key" x="18" y="160">FK operator_id bigint</text>
+    <text class="field" x="18" y="188">event_type varchar(60)</text>
+    <text class="field" x="18" y="216">notes text</text>
+    <text class="field" x="18" y="244">latitude decimal(10,7)</text>
+    <text class="field" x="18" y="272">longitude decimal(10,7)</text>
+    <text class="field" x="18" y="300">created_at timestamp</text>
+  </g>
+
+  <path class="rel" d="M380 265 C480 265 530 252 640 252"/>
+  <text class="label" x="430" y="246">users 1:N field_routes</text>
+
+  <path class="rel" d="M970 250 C1070 250 1110 230 1210 230"/>
+  <text class="label" x="1020" y="218">field_routes 1:N route_points</text>
+
+  <path class="rel" d="M795 495 C795 555 795 590 795 640"/>
+  <text class="label" x="815" y="575">field_routes 1:N assignments</text>
+
+  <path class="rel" d="M380 390 C520 520 520 715 615 740"/>
+  <text class="label" x="420" y="612">users 1:N assignments</text>
+
+  <path class="rel" d="M985 770 C1050 770 1090 740 1160 720"/>
+  <text class="label" x="1018" y="750">assignments 1:N locations</text>
+
+  <path class="rel" d="M970 375 C1090 450 1125 585 1160 660"/>
+  <text class="label" x="1015" y="520">routes 1:N locations</text>
+
+  <path class="rel" d="M380 435 C660 520 925 575 1160 690"/>
+  <text class="label" x="545" y="500">users 1:N locations</text>
+
+  <path class="rel" d="M615 870 C525 870 490 840 410 810"/>
+  <text class="label" x="445" y="855">assignments 1:N events</text>
+
+  <path class="rel" d="M640 425 C505 520 430 650 410 740"/>
+  <text class="label" x="455" y="585">routes 1:N events</text>
+
+  <path class="rel" d="M245 460 C245 535 245 585 245 650"/>
+  <text class="label" x="265" y="565">users 1:N events</text>
+</svg>

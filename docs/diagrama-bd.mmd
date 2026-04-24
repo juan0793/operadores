@@ -1,0 +1,89 @@
+erDiagram
+  USERS {
+    bigint id PK
+    varchar name
+    varchar email UK
+    text password_hash
+    enum role
+    varchar phone
+    boolean is_active
+    timestamp created_at
+    timestamp updated_at
+  }
+
+  FIELD_ROUTES {
+    bigint id PK
+    varchar name
+    text description
+    varchar color
+    enum status
+    timestamp starts_at
+    timestamp ends_at
+    boolean is_public
+    bigint created_by FK
+    timestamp created_at
+    timestamp updated_at
+  }
+
+  ROUTE_POINTS {
+    bigint id PK
+    bigint route_id FK
+    decimal latitude
+    decimal longitude
+    int sequence
+    text instruction
+    timestamp created_at
+  }
+
+  ROUTE_ASSIGNMENTS {
+    bigint id PK
+    bigint route_id FK
+    bigint operator_id FK
+    bigint assigned_by FK
+    enum status
+    decimal progress_percent
+    text notes
+    timestamp assigned_at
+    timestamp started_at
+    timestamp completed_at
+  }
+
+  OPERATOR_LOCATIONS {
+    bigint id PK
+    bigint assignment_id FK
+    bigint operator_id FK
+    bigint route_id FK
+    decimal latitude
+    decimal longitude
+    decimal accuracy
+    decimal speed
+    decimal heading
+    decimal battery_level
+    timestamp recorded_at
+  }
+
+  ROUTE_EVENTS {
+    bigint id PK
+    bigint assignment_id FK
+    bigint route_id FK
+    bigint operator_id FK
+    varchar event_type
+    text notes
+    decimal latitude
+    decimal longitude
+    timestamp created_at
+  }
+
+  USERS ||--o{ FIELD_ROUTES : "created_by"
+  USERS ||--o{ ROUTE_ASSIGNMENTS : "operator_id"
+  USERS ||--o{ ROUTE_ASSIGNMENTS : "assigned_by"
+  USERS ||--o{ OPERATOR_LOCATIONS : "operator_id"
+  USERS ||--o{ ROUTE_EVENTS : "operator_id"
+
+  FIELD_ROUTES ||--o{ ROUTE_POINTS : "route_id"
+  FIELD_ROUTES ||--o{ ROUTE_ASSIGNMENTS : "route_id"
+  FIELD_ROUTES ||--o{ OPERATOR_LOCATIONS : "route_id"
+  FIELD_ROUTES ||--o{ ROUTE_EVENTS : "route_id"
+
+  ROUTE_ASSIGNMENTS ||--o{ OPERATOR_LOCATIONS : "assignment_id"
+  ROUTE_ASSIGNMENTS ||--o{ ROUTE_EVENTS : "assignment_id"

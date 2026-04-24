@@ -34,6 +34,17 @@ sistema-rutas-operadores/
   package.json
 ```
 
+## Diagrama de base de datos
+
+![Diagrama de base de datos](docs/diagrama-bd.png)
+
+Archivos disponibles:
+
+- `docs/diagrama-bd.png`: imagen local del diagrama.
+- `docs/diagrama-bd.svg`: version editable como imagen vectorial.
+- `docs/diagrama-bd.mmd`: fuente Mermaid para documentacion.
+- `docs/diagrama-bd.html`: visor HTML del diagrama Mermaid.
+
 ## Funcionalidades incluidas
 
 - Login con roles.

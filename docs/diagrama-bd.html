@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Diagrama BD - Sistema Rutas Operadores</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 28px;
+        color: #172033;
+        background: #eef2f7;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      h1 {
+        margin: 0 0 16px;
+        font-size: 28px;
+      }
+
+      .canvas {
+        padding: 22px;
+        border: 1px solid #d8e0ea;
+        border-radius: 8px;
+        background: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Diagrama de Base de Datos</h1>
+    <div class="canvas">
+      <pre class="mermaid">
+erDiagram
+  USERS {
+    bigint id PK
+    varchar name
+    varchar email UK
+    text password_hash
+    enum role
+    varchar phone
+    boolean is_active
+    timestamp created_at
+    timestamp updated_at
+  }
+
+  FIELD_ROUTES {
+    bigint id PK
+    varchar name
+    text description
+    varchar color
+    enum status
+    timestamp starts_at
+    timestamp ends_at
+    boolean is_public
+    bigint created_by FK
+    timestamp created_at
+    timestamp updated_at
+  }
+
+  ROUTE_POINTS {
+    bigint id PK
+    bigint route_id FK
+    decimal latitude
+    decimal longitude
+    int sequence
+    text instruction
+    timestamp created_at
+  }
+
+  ROUTE_ASSIGNMENTS {
+    bigint id PK
+    bigint route_id FK
+    bigint operator_id FK
+    bigint assigned_by FK
+    enum status
+    decimal progress_percent
+    text notes
+    timestamp assigned_at
+    timestamp started_at
+    timestamp completed_at
+  }
+
+  OPERATOR_LOCATIONS {
+    bigint id PK
+    bigint assignment_id FK
+    bigint operator_id FK
+    bigint route_id FK
+    decimal latitude
+    decimal longitude
+    decimal accuracy
+    decimal speed
+    decimal heading
+    decimal battery_level
+    timestamp recorded_at
+  }
+
+  ROUTE_EVENTS {
+    bigint id PK
+    bigint assignment_id FK
+    bigint route_id FK
+    bigint operator_id FK
+    varchar event_type
+    text notes
+    decimal latitude
+    decimal longitude
+    timestamp created_at
+  }
+
+  USERS ||--o{ FIELD_ROUTES : "created_by"
+  USERS ||--o{ ROUTE_ASSIGNMENTS : "operator_id"
+  USERS ||--o{ ROUTE_ASSIGNMENTS : "assigned_by"
+  USERS ||--o{ OPERATOR_LOCATIONS : "operator_id"
+  USERS ||--o{ ROUTE_EVENTS : "operator_id"
+
+  FIELD_ROUTES ||--o{ ROUTE_POINTS : "route_id"
+  FIELD_ROUTES ||--o{ ROUTE_ASSIGNMENTS : "route_id"
+  FIELD_ROUTES ||--o{ OPERATOR_LOCATIONS : "route_id"
+  FIELD_ROUTES ||--o{ ROUTE_EVENTS : "route_id"
+
+  ROUTE_ASSIGNMENTS ||--o{ OPERATOR_LOCATIONS : "assignment_id"
+  ROUTE_ASSIGNMENTS ||--o{ ROUTE_EVENTS : "assignment_id"
+      </pre>
+    </div>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "base",
+        themeVariables: {
+          primaryColor: "#e0f2fe",
+          primaryBorderColor: "#0f766e",
+          primaryTextColor: "#172033",
+          lineColor: "#475569",
+          fontFamily: "Arial, Helvetica, sans-serif"
+        }
+      });
+    </script>
+  </body>
+</html>
