@@ -14,23 +14,27 @@ router.get("/routes", async (_req, res, next) => {
               latest.recorded_at as last_location_at,
               latest.latitude, latest.longitude,
               coalesce(
-                json_agg(
-                  json_build_object('latitude', rp.latitude, 'longitude', rp.longitude, 'sequence', rp.sequence)
-                  order by rp.sequence
-                ) filter (where rp.id is not null),
-                '[]'
+                json_arrayagg(
+                  case
+                    when rp.id is null then null
+                    else json_object('latitude', rp.latitude, 'longitude', rp.longitude, 'sequence', rp.sequence)
+                  end
+                ),
+                json_array()
               ) as points
        from field_routes r
        left join route_assignments a on a.route_id = r.id and a.status <> 'cancelled'
        left join users u on u.id = a.operator_id
        left join route_points rp on rp.route_id = r.id
-       left join lateral (
-         select latitude, longitude, recorded_at
+       left join (
+         select ol.route_id, ol.latitude, ol.longitude, ol.recorded_at
          from operator_locations ol
-         where ol.route_id = r.id
-         order by recorded_at desc
-         limit 1
-       ) latest on true
+         join (
+           select route_id, max(recorded_at) as recorded_at
+           from operator_locations
+           group by route_id
+         ) mx on mx.route_id = ol.route_id and mx.recorded_at = ol.recorded_at
+       ) latest on latest.route_id = r.id
        where r.is_public = true
        group by r.id, a.progress_percent, a.started_at, a.completed_at, u.name,
                 latest.recorded_at, latest.latitude, latest.longitude

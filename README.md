@@ -8,7 +8,7 @@ Este proyecto no depende del sistema de clandestinos. Vive en su propia carpeta,
 
 - Frontend: React + Vite
 - Backend: Node.js + Express
-- Base de datos: PostgreSQL
+- Base de datos: MySQL/MariaDB
 - Mapa: Leaflet + OpenStreetMap
 - Tiempo real: Socket.IO
 - Autenticacion: JWT con roles `administrador`, `supervisor`, `operador` y `publico`
@@ -56,16 +56,16 @@ sistema-rutas-operadores/
 
 ## Configuracion local
 
-1. Crear base PostgreSQL:
+1. Crear base MySQL/MariaDB:
 
 ```bash
-createdb sistema_rutas_operadores
+mysql -u root -p -e "create database if not exists sistema_rutas_operadores character set utf8mb4 collate utf8mb4_unicode_ci;"
 ```
 
 2. Ejecutar el esquema:
 
 ```bash
-psql sistema_rutas_operadores < backend/sql/schema.sql
+mysql -u root -p sistema_rutas_operadores < backend/sql/schema.sql
 ```
 
 3. Crear archivos de entorno:
@@ -79,7 +79,11 @@ cp frontend/.env.example frontend/.env
 
 ```env
 PORT=4001
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sistema_rutas_operadores
+DB_HOST=127.0.0.1
+DB_PORT=3307
+DB_USER=root
+DB_PASSWORD=root
+DB_NAME=sistema_rutas_operadores
 JWT_SECRET=cambiar_este_secreto_en_produccion
 FRONTEND_URL=http://localhost:5174
 ```
@@ -131,7 +135,11 @@ Variables:
 
 ```env
 NODE_ENV=production
-DATABASE_URL=${{Postgres.DATABASE_URL}}
+DB_HOST=${{MySQL.MYSQLHOST}}
+DB_PORT=${{MySQL.MYSQLPORT}}
+DB_USER=${{MySQL.MYSQLUSER}}
+DB_PASSWORD=${{MySQL.MYSQLPASSWORD}}
+DB_NAME=${{MySQL.MYSQLDATABASE}}
 JWT_SECRET=un_secreto_largo_y_privado
 JWT_EXPIRES_IN=8h
 FRONTEND_URL=https://tu-frontend.railway.app
@@ -143,7 +151,7 @@ Comando de inicio:
 npm --prefix backend start
 ```
 
-Ejecutar `backend/sql/schema.sql` en la base PostgreSQL de Railway y luego el seed si se desean usuarios iniciales.
+Ejecutar `backend/sql/schema.sql` en la base MySQL de Railway y luego el seed si se desean usuarios iniciales.
 
 ### Frontend
 

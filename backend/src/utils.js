@@ -25,12 +25,12 @@ export function publicRoute(row) {
     last_location_at: row.last_location_at || null,
     latitude: row.latitude === null ? null : Number(row.latitude),
     longitude: row.longitude === null ? null : Number(row.longitude),
-    points: Array.isArray(row.points)
-      ? row.points.map((point) => ({
+    points: (Array.isArray(row.points) ? row.points : JSON.parse(row.points || "[]"))
+      .filter(Boolean)
+      .map((point) => ({
           latitude: Number(point.latitude),
           longitude: Number(point.longitude),
           sequence: point.sequence,
-        }))
-      : [],
+        })),
   };
 }

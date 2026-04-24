@@ -24,8 +24,7 @@ export async function saveLocation(user, data) {
   const result = await query(
     `insert into operator_locations
      (assignment_id, operator_id, route_id, latitude, longitude, accuracy, speed, heading, battery_level)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-     returning *`,
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
     [
       data.assignment_id,
       assignment.rows[0].operator_id,
@@ -38,6 +37,7 @@ export async function saveLocation(user, data) {
       data.battery_level ?? null,
     ]
   );
+  const created = await query("select * from operator_locations where id = $1", [result.rows.insertId]);
 
   await query(
     `update route_assignments
@@ -48,7 +48,7 @@ export async function saveLocation(user, data) {
     [data.progress_percent ?? null, data.assignment_id]
   );
   await query("update field_routes set status = 'in_progress', updated_at = now() where id = $1", [assignment.rows[0].route_id]);
-  return result.rows[0];
+  return created.rows[0];
 }
 
 const router = Router();
@@ -69,12 +69,16 @@ router.post("/", async (req, res, next) => {
 router.get("/latest", async (_req, res, next) => {
   try {
     const result = await query(
-      `select distinct on (ol.assignment_id)
-              ol.*, u.name as operator_name, r.name as route_name, r.color
+      `select ol.*, u.name as operator_name, r.name as route_name, r.color
        from operator_locations ol
        join users u on u.id = ol.operator_id
        join field_routes r on r.id = ol.route_id
-       order by ol.assignment_id, ol.recorded_at desc`
+       join (
+         select assignment_id, max(recorded_at) as recorded_at
+         from operator_locations
+         group by assignment_id
+       ) latest on latest.assignment_id = ol.assignment_id and latest.recorded_at = ol.recorded_at
+       order by ol.recorded_at desc`
     );
     res.json(result.rows);
   } catch (error) {

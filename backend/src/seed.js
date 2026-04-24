@@ -14,7 +14,7 @@ async function seed() {
     await query(
       `insert into users (name, email, password_hash, role)
        values ($1, $2, $3, $4)
-       on conflict (email) do nothing`,
+       on duplicate key update name = values(name), role = values(role)`,
       [name, email, passwordHash, role]
     );
   }

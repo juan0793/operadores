@@ -10,11 +10,11 @@ router.get("/summary", async (_req, res, next) => {
   try {
     const result = await query(
       `select
-         count(*) filter (where r.status = 'draft') as draft,
-         count(*) filter (where r.status = 'assigned') as assigned,
-         count(*) filter (where r.status = 'in_progress') as in_progress,
-         count(*) filter (where r.status = 'completed') as completed,
-         count(*) filter (where r.status = 'cancelled') as cancelled,
+         coalesce(sum(case when r.status = 'draft' then 1 else 0 end), 0) as draft,
+         coalesce(sum(case when r.status = 'assigned' then 1 else 0 end), 0) as assigned,
+         coalesce(sum(case when r.status = 'in_progress' then 1 else 0 end), 0) as in_progress,
+         coalesce(sum(case when r.status = 'completed' then 1 else 0 end), 0) as completed,
+         coalesce(sum(case when r.status = 'cancelled' then 1 else 0 end), 0) as cancelled,
          coalesce(round(avg(a.progress_percent)), 0) as average_progress
        from field_routes r
        left join route_assignments a on a.route_id = r.id and a.status <> 'cancelled'`

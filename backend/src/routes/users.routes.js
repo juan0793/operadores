@@ -34,11 +34,14 @@ router.post("/", authorize("administrador"), async (req, res, next) => {
     const passwordHash = await bcrypt.hash(data.password || "Temporal123", 10);
     const result = await query(
       `insert into users (name, email, password_hash, role, phone, is_active)
-       values ($1, $2, $3, $4, $5, $6)
-       returning id, name, email, role, phone, is_active, created_at`,
+       values ($1, $2, $3, $4, $5, $6)`,
       [data.name, data.email, passwordHash, data.role, data.phone || null, data.is_active ?? true]
     );
-    res.status(201).json(result.rows[0]);
+    const created = await query(
+      "select id, name, email, role, phone, is_active, created_at from users where id = $1",
+      [result.rows.insertId]
+    );
+    res.status(201).json(created.rows[0]);
   } catch (error) {
     next(error);
   }
@@ -56,7 +59,7 @@ router.patch("/:id", authorize("administrador"), async (req, res, next) => {
 
     const result = await query(
       `update users set name = $1, email = $2, password_hash = $3, role = $4, phone = $5, is_active = $6
-       where id = $7 returning id, name, email, role, phone, is_active, created_at`,
+       where id = $7`,
       [
         data.name ?? current.rows[0].name,
         data.email ?? current.rows[0].email,
@@ -67,7 +70,11 @@ router.patch("/:id", authorize("administrador"), async (req, res, next) => {
         req.params.id,
       ]
     );
-    res.json(result.rows[0]);
+    const updated = await query(
+      "select id, name, email, role, phone, is_active, created_at from users where id = $1",
+      [req.params.id]
+    );
+    res.json(updated.rows[0]);
   } catch (error) {
     next(error);
   }
