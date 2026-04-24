@@ -41,4 +41,20 @@ router.get("/history", async (_req, res, next) => {
   }
 });
 
+router.get("/events", async (_req, res, next) => {
+  try {
+    const result = await query(
+      `select e.*, r.name as route_name, u.name as operator_name
+       from route_events e
+       left join field_routes r on r.id = e.route_id
+       left join users u on u.id = e.operator_id
+       order by e.created_at desc
+       limit 50`
+    );
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

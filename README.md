@@ -57,8 +57,14 @@ Archivos disponibles:
 - Operador:
   - ver rutas asignadas,
   - iniciar captura GPS desde dispositivo movil,
-  - reportar avance,
+  - reportar ubicacion GPS,
+  - calcular avance segun la ruta trazada,
+  - recibir aviso si se desvia de la ruta,
   - finalizar ruta.
+- Alertas:
+  - el backend compara cada ubicacion contra la linea oficial de la ruta,
+  - registra evento `route_deviation` si el operador supera `DEVIATION_WARNING_METERS`,
+  - muestra alertas en el monitoreo interno sin publicarlas en la pantalla ciudadana.
 - Pantalla publica:
   - acceso en `/public`,
   - muestra solo rutas marcadas como publicas,
@@ -97,6 +103,7 @@ DB_PASSWORD=root
 DB_NAME=sistema_rutas_operadores
 JWT_SECRET=cambiar_este_secreto_en_produccion
 FRONTEND_URL=http://localhost:5174
+DEVIATION_WARNING_METERS=80
 ```
 
 5. Instalar dependencias:

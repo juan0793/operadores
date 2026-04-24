@@ -439,6 +439,41 @@ td {
   color: #cbd5e1;
 }
 
+.muted {
+  margin: 0;
+  color: #64748b;
+}
+
+.warning-title svg {
+  color: #dc2626;
+}
+
+.warning-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.warning-card {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid #fecaca;
+  border-left: 5px solid #dc2626;
+  border-radius: 8px;
+  background: #fff7ed;
+}
+
+.warning-card strong,
+.warning-card p {
+  margin: 0;
+}
+
+.warning-card span,
+.warning-card small {
+  color: #64748b;
+}
+
 @media (max-width: 900px) {
   .login-panel,
   .app-shell,

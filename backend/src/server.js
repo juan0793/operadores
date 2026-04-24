@@ -23,6 +23,7 @@ io.on("connection", (socket) => {
       const data = locationSchema.parse(payload);
       const location = await saveLocation(socket.user, data);
       io.to("monitor").emit("location:updated", location);
+      if (location.warning) io.to("monitor").emit("route:warning", location.warning);
       io.to("public").emit("public:updated");
       ack?.({ ok: true, location });
     } catch (error) {

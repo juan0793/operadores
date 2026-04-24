@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { z } from "zod";
+import { config } from "../config.js";
 import { query } from "../db.js";
+import { measureRoutePosition } from "../geo.js";
 import { authenticate } from "../middleware/auth.js";
 
 export const locationSchema = z.object({
@@ -20,6 +22,14 @@ export async function saveLocation(user, data) {
   if (user.role === "operador" && assignment.rows[0].operator_id !== user.id) {
     throw Object.assign(new Error("No autorizado"), { statusCode: 403 });
   }
+
+  const routePoints = await query(
+    "select latitude, longitude, sequence from route_points where route_id = $1 order by sequence",
+    [assignment.rows[0].route_id]
+  );
+  const routePosition = measureRoutePosition(data, routePoints.rows);
+  const progressPercent = routePosition?.progressPercent ?? data.progress_percent ?? null;
+  const isDeviation = routePosition && routePosition.distanceMeters > config.deviationWarningMeters;
 
   const result = await query(
     `insert into operator_locations
@@ -45,10 +55,52 @@ export async function saveLocation(user, data) {
          progress_percent = coalesce($1, progress_percent),
          started_at = coalesce(started_at, now())
      where id = $2`,
-    [data.progress_percent ?? null, data.assignment_id]
+    [progressPercent, data.assignment_id]
   );
   await query("update field_routes set status = 'in_progress', updated_at = now() where id = $1", [assignment.rows[0].route_id]);
-  return created.rows[0];
+
+  let warning = null;
+  if (isDeviation) {
+    const recent = await query(
+      `select id from route_events
+       where assignment_id = $1
+         and event_type = 'route_deviation'
+         and created_at >= date_sub(now(), interval 5 minute)
+       order by created_at desc
+       limit 1`,
+      [data.assignment_id]
+    );
+
+    warning = {
+      type: "route_deviation",
+      assignment_id: data.assignment_id,
+      operator_id: assignment.rows[0].operator_id,
+      route_id: assignment.rows[0].route_id,
+      distance_meters: routePosition.distanceMeters,
+      threshold_meters: config.deviationWarningMeters,
+      latitude: data.latitude,
+      longitude: data.longitude,
+      progress_percent: progressPercent,
+      message: `Operador fuera de ruta por ${routePosition.distanceMeters} m`,
+    };
+
+    if (!recent.rows[0]) {
+      await query(
+        `insert into route_events (assignment_id, route_id, operator_id, event_type, notes, latitude, longitude)
+         values ($1, $2, $3, 'route_deviation', $4, $5, $6)`,
+        [
+          data.assignment_id,
+          assignment.rows[0].route_id,
+          assignment.rows[0].operator_id,
+          warning.message,
+          data.latitude,
+          data.longitude,
+        ]
+      );
+    }
+  }
+
+  return { ...created.rows[0], route_distance_meters: routePosition?.distanceMeters ?? null, progress_percent: progressPercent, warning };
 }
 
 const router = Router();
@@ -59,6 +111,7 @@ router.post("/", async (req, res, next) => {
     const data = locationSchema.parse(req.body);
     const location = await saveLocation(req.user, data);
     req.app.get("io")?.to("monitor").emit("location:updated", location);
+    if (location.warning) req.app.get("io")?.to("monitor").emit("route:warning", location.warning);
     req.app.get("io")?.to("public").emit("public:updated");
     res.status(201).json(location);
   } catch (error) {

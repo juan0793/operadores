@@ -1,4 +1,4 @@
-import { Activity, ClipboardList, LogOut, MapPin, Navigation, Play, Plus, Radio, Route, Users } from "lucide-react";
+import { Activity, AlertTriangle, ClipboardList, LogOut, MapPin, Navigation, Play, Plus, Radio, Route, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { io } from "socket.io-client";
 import { apiFetch, getApiUrl } from "./api.js";
@@ -114,30 +114,36 @@ function AdminDashboard({ user }) {
   const [operators, setOperators] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [locations, setLocations] = useState([]);
+  const [warnings, setWarnings] = useState([]);
   const [summary, setSummary] = useState(null);
   const [form, setForm] = useState(emptyRoute);
   const [selectedRoute, setSelectedRoute] = useState("");
   const [selectedOperator, setSelectedOperator] = useState("");
 
   async function load() {
-    const [routeList, userList, assignmentList, locationList, report] = await Promise.all([
+    const [routeList, userList, assignmentList, locationList, report, eventList] = await Promise.all([
       apiFetch("/api/routes"),
       apiFetch("/api/users"),
       apiFetch("/api/assignments"),
       apiFetch("/api/locations/latest"),
       apiFetch("/api/reports/summary"),
+      apiFetch("/api/reports/events"),
     ]);
     setRoutes(routeList);
     setOperators(userList.filter((item) => item.role === "operador"));
     setAssignments(assignmentList);
     setLocations(locationList);
     setSummary(report);
+    setWarnings(eventList.filter((event) => event.event_type === "route_deviation"));
   }
 
   useEffect(() => {
     load();
     const socket = io(getApiUrl(), { auth: { token: localStorage.getItem("rutas_token") } });
     socket.on("location:updated", () => load());
+    socket.on("route:warning", (warning) => {
+      setWarnings((current) => [{ ...warning, created_at: new Date().toISOString() }, ...current].slice(0, 10));
+    });
     return () => socket.disconnect();
   }, []);
 
@@ -219,6 +225,24 @@ function AdminDashboard({ user }) {
         <MonitorMap routes={detailedRoutes} locations={locations} />
       </section>
 
+      <section className="panel wide">
+        <div className="panel-title warning-title"><AlertTriangle /><h2>Alertas de desvio</h2></div>
+        {warnings.length === 0 ? (
+          <p className="muted">Sin alertas de desvio registradas.</p>
+        ) : (
+          <div className="warning-list">
+            {warnings.slice(0, 8).map((warning, index) => (
+              <article className="warning-card" key={`${warning.id || warning.assignment_id}-${warning.created_at || index}`}>
+                <strong>{warning.route_name || `Ruta #${warning.route_id}`}</strong>
+                <span>{warning.operator_name || `Operador #${warning.operator_id}`}</span>
+                <p>{warning.notes || warning.message || "Operador fuera de la ruta marcada."}</p>
+                <small>{warning.created_at ? new Date(warning.created_at).toLocaleString() : "Ahora"}</small>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
       <section id="reportes" className="panel wide">
         <div className="panel-title"><ClipboardList /><h2>Historial</h2></div>
         <div className="table-wrap">
@@ -266,7 +290,6 @@ function OperatorDashboard({ user }) {
     const socket = io(getApiUrl(), { auth: { token: localStorage.getItem("rutas_token") } });
     navigator.geolocation.watchPosition(
       (position) => {
-        const progress = Math.min(100, Number(active.progress_percent || 0) + 1);
         socket.emit("operator:location", {
           assignment_id: active.id,
           latitude: position.coords.latitude,
@@ -274,9 +297,14 @@ function OperatorDashboard({ user }) {
           accuracy: position.coords.accuracy,
           speed: position.coords.speed,
           heading: position.coords.heading,
-          progress_percent: progress,
+        }, (response) => {
+          if (response?.location?.progress_percent !== undefined) {
+            setActive((item) => ({ ...item, progress_percent: response.location.progress_percent, status: "in_progress" }));
+          }
+          if (response?.location?.warning) {
+            setMessage(`Atencion: estas a ${response.location.warning.distance_meters} m de la ruta marcada.`);
+          }
         });
-        setActive((item) => ({ ...item, progress_percent: progress, status: "in_progress" }));
       },
       () => setMessage("No se pudo obtener la ubicacion. Revisa permisos del navegador."),
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
