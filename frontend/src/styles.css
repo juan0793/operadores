@@ -684,6 +684,27 @@ td {
   z-index: 0;
 }
 
+.public-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  color: #cbd5e1;
+  font-weight: 800;
+}
+
+.public-day-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.public-day-tabs button {
+  color: #cbd5e1;
+}
+
 .public-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -693,7 +714,7 @@ td {
 
 .public-focus {
   display: grid;
-  grid-template-columns: repeat(5, minmax(220px, 1fr));
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
   gap: 12px;
   margin-top: 14px;
 }
@@ -918,6 +939,11 @@ td {
 
   .public-focus {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .public-controls {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .fullscreen-route-header {

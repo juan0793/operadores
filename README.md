@@ -82,7 +82,9 @@ Archivos disponibles:
   - muestra solo rutas marcadas como publicas,
   - oculta correo, telefono y datos internos,
   - usa mapa urbano de mayor nitidez,
-  - muestra un mapa general y hasta 5 paneles simultaneos,
+  - permite filtrar por dia de operacion: todos, lunes, martes, miercoles, jueves, viernes, sabado o domingo,
+  - muestra un mapa general y hasta 8 paneles simultaneos,
+  - cada panel se puede ampliar a pantalla completa y volver a la vista pequena,
   - actualiza por Socket.IO y por respaldo cada 30 segundos.
 
 ## Configuracion local

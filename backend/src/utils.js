@@ -16,6 +16,7 @@ export function normalizeRoutePayload(body) {
 export function publicRoute(row) {
   return {
     id: row.id,
+    assignment_id: row.assignment_id || null,
     name: row.name,
     neighborhood: row.neighborhood,
     description: row.description,

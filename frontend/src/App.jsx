@@ -611,6 +611,7 @@ function OperatorDashboard({ user }) {
 function PublicScreen() {
   const [routes, setRoutes] = useState([]);
   const [expandedRoute, setExpandedRoute] = useState(null);
+  const [selectedPublicDay, setSelectedPublicDay] = useState("todos");
 
   async function load() {
     const list = await apiFetch("/api/public/routes", { headers: {} });
@@ -636,8 +637,11 @@ function PublicScreen() {
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, []);
 
-  const locations = routes.filter((route) => route.latitude && route.longitude);
-  const focusRoutes = routes.slice(0, 5);
+  const visibleRoutes = selectedPublicDay === "todos"
+    ? routes
+    : routes.filter((route) => route.service_day === selectedPublicDay);
+  const focusRoutes = visibleRoutes.slice(0, 8);
+  const visibleLocations = visibleRoutes.filter((route) => route.latitude && route.longitude);
 
   return (
     <main className="public-screen">
@@ -648,14 +652,25 @@ function PublicScreen() {
         </div>
         <span>{new Date().toLocaleDateString()}</span>
       </header>
-      <section className="public-map"><MonitorMap routes={routes} locations={locations} tracks={[]} /></section>
+      <section className="public-controls">
+        <div className="segmented public-day-tabs">
+          <button type="button" className={selectedPublicDay === "todos" ? "active" : ""} onClick={() => setSelectedPublicDay("todos")}>Todos</button>
+          {weekDays.map((day) => (
+            <button key={day.value} type="button" className={selectedPublicDay === day.value ? "active" : ""} onClick={() => setSelectedPublicDay(day.value)}>
+              {day.label}
+            </button>
+          ))}
+        </div>
+        <span>{focusRoutes.length} de 8 pantallas activas</span>
+      </section>
+      <section className="public-map"><MonitorMap routes={visibleRoutes} locations={visibleLocations} tracks={[]} /></section>
       <section className="public-focus">
         {focusRoutes.map((route) => {
           const routeLocation = route.latitude && route.longitude ? [route] : [];
           return (
             <article
               className="public-focus-panel"
-              key={`focus-${route.id}`}
+              key={`focus-${route.assignment_id || route.id}-${route.service_day || "all"}`}
               role="button"
               tabIndex={0}
               onClick={() => setExpandedRoute(route)}
@@ -677,8 +692,8 @@ function PublicScreen() {
         })}
       </section>
       <section className="public-list">
-        {routes.map((route) => (
-          <article key={route.id} className="route-card">
+        {visibleRoutes.map((route) => (
+          <article key={`${route.assignment_id || route.id}-${route.service_day || "all"}`} className="route-card">
             <span className="badge">{statusLabel(route.status)}</span>
             <h2>{route.name}</h2>
             {route.neighborhood && <small>{route.neighborhood}</small>}
