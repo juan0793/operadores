@@ -932,15 +932,23 @@ function PublicScreen() {
     <main className="public-screen">
       <header className="public-header">
         <div>
-          <span className="eyebrow">Seguimiento ciudadano</span>
-          <h1>Avance de rutas en tiempo real</h1>
-          <p>Mostrando {selectedDayLabel.toLowerCase()} con actualizacion automatica.</p>
+          <div className="public-brand">
+            <span className="eyebrow">Seguimiento ciudadano</span>
+            <span className="public-city-pill">Ciudad de Choluteca</span>
+          </div>
+          <h1>Avance de rutas en tiempo real de Choluteca</h1>
+          <p>Tablero publico de monitoreo municipal. Mostrando {selectedDayLabel.toLowerCase()} con actualizacion automatica.</p>
         </div>
         <div className="public-date-card">
           <span>{dayLabel(todayServiceDay)}</span>
           <strong>{new Date().toLocaleDateString()}</strong>
         </div>
       </header>
+      <section className="public-context-strip" aria-label="Resumen del tablero publico">
+        <span>Municipio de Choluteca</span>
+        <span>Cobertura ciudadana en tiempo real</span>
+        <span>Sin datos sensibles de operadores</span>
+      </section>
       <section className="public-controls">
         <div className="segmented public-day-tabs">
           <button type="button" className={selectedPublicDay === "todos" ? "active" : ""} onClick={() => setSelectedPublicDay("todos")}>Todos</button>

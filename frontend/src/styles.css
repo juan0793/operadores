@@ -846,8 +846,9 @@ td {
   padding: 24px;
   color: white;
   background:
-    radial-gradient(circle at top left, rgba(20, 184, 166, 0.2), transparent 34%),
-    linear-gradient(180deg, #0f172a 0%, #111827 52%, #0b1220 100%);
+    radial-gradient(circle at top left, rgba(45, 212, 191, 0.2), transparent 30%),
+    radial-gradient(circle at 80% 0%, rgba(56, 189, 248, 0.16), transparent 28%),
+    linear-gradient(180deg, #08111f 0%, #101827 48%, #0b1220 100%);
 }
 
 .public-header {
@@ -858,15 +859,38 @@ td {
   margin-bottom: 20px;
 }
 
+.public-brand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.public-city-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border: 1px solid rgba(56, 189, 248, 0.34);
+  border-radius: 999px;
+  color: #e0f2fe;
+  background: rgba(14, 116, 144, 0.32);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
 .public-header h1 {
   max-width: 1180px;
-  font-size: clamp(2.4rem, 5vw, 4.8rem);
+  font-size: clamp(2.35rem, 4.7vw, 4.65rem);
 }
 
 .public-header p {
   margin: 8px 0 0;
   color: #cbd5e1;
   font-size: 1.05rem;
+  line-height: 1.45;
+  max-width: 760px;
 }
 
 .public-date-card {
@@ -890,6 +914,25 @@ td {
 
 .public-date-card strong {
   font-size: 1.15rem;
+}
+
+.public-context-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin-bottom: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.16);
+  border-radius: 8px;
+  background: rgba(226, 232, 240, 0.14);
+}
+
+.public-context-strip span {
+  min-height: 48px;
+  padding: 13px 16px;
+  color: #dbeafe;
+  background: rgba(15, 23, 42, 0.72);
+  font-weight: 850;
 }
 
 .public-map {
@@ -1243,6 +1286,10 @@ td {
   .public-date-card {
     width: 100%;
     text-align: left;
+  }
+
+  .public-context-strip {
+    grid-template-columns: 1fr;
   }
 
   .map-dashboard,
