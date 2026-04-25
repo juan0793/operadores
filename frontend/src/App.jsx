@@ -42,6 +42,11 @@ function dayLabel(day) {
   return weekDays.find((item) => item.value === day)?.label || day || "Sin dia";
 }
 
+function getTodayServiceDay() {
+  const days = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
+  return days[new Date().getDay()];
+}
+
 function statusLabel(status) {
   return {
     draft: "Borrador",
@@ -887,7 +892,7 @@ function OperatorDashboard({ user }) {
 function PublicScreen() {
   const [routes, setRoutes] = useState([]);
   const [expandedRoute, setExpandedRoute] = useState(null);
-  const [selectedPublicDay, setSelectedPublicDay] = useState("todos");
+  const [selectedPublicDay, setSelectedPublicDay] = useState(getTodayServiceDay);
 
   async function load() {
     const list = await apiFetch("/api/public/routes", { headers: {} });
@@ -918,6 +923,10 @@ function PublicScreen() {
     : routes.filter((route) => route.service_day === selectedPublicDay);
   const focusRoutes = visibleRoutes.slice(0, 8);
   const visibleLocations = visibleRoutes.filter((route) => route.latitude && route.longitude);
+  const todayServiceDay = getTodayServiceDay();
+  const selectedDayLabel = selectedPublicDay === "todos" ? "Toda la semana" : dayLabel(selectedPublicDay);
+  const activeRoutes = visibleRoutes.filter((route) => ["assigned", "in_progress"].includes(route.status)).length;
+  const completedRoutes = visibleRoutes.filter((route) => route.status === "completed" || Number(route.progress_percent) >= 100).length;
 
   return (
     <main className="public-screen">
@@ -925,23 +934,39 @@ function PublicScreen() {
         <div>
           <span className="eyebrow">Seguimiento ciudadano</span>
           <h1>Avance de rutas en tiempo real</h1>
+          <p>Mostrando {selectedDayLabel.toLowerCase()} con actualizacion automatica.</p>
         </div>
-        <span>{new Date().toLocaleDateString()}</span>
+        <div className="public-date-card">
+          <span>{dayLabel(todayServiceDay)}</span>
+          <strong>{new Date().toLocaleDateString()}</strong>
+        </div>
       </header>
       <section className="public-controls">
         <div className="segmented public-day-tabs">
           <button type="button" className={selectedPublicDay === "todos" ? "active" : ""} onClick={() => setSelectedPublicDay("todos")}>Todos</button>
           {weekDays.map((day) => (
             <button key={day.value} type="button" className={selectedPublicDay === day.value ? "active" : ""} onClick={() => setSelectedPublicDay(day.value)}>
-              {day.label}
+              {day.label}{day.value === todayServiceDay ? " hoy" : ""}
             </button>
           ))}
         </div>
-        <span>{focusRoutes.length} de 8 pantallas activas</span>
+        <div className="public-live-stats">
+          <span><strong>{focusRoutes.length}</strong> de 8 pantallas</span>
+          <span><strong>{activeRoutes}</strong> activas</span>
+          <span><strong>{completedRoutes}</strong> completadas</span>
+        </div>
       </section>
       <section className="public-map"><MonitorMap routes={visibleRoutes} locations={visibleLocations} tracks={[]} /></section>
-      <section className="public-focus">
-        {focusRoutes.map((route) => {
+      {focusRoutes.length === 0 ? (
+        <section className="public-empty-state">
+          <span className="eyebrow">Sin rutas visibles</span>
+          <h2>No hay rutas publicas programadas para {selectedDayLabel.toLowerCase()}.</h2>
+          <p>Puede revisar el tablero semanal completo o seleccionar otro dia.</p>
+          <button type="button" onClick={() => setSelectedPublicDay("todos")}>Ver toda la semana</button>
+        </section>
+      ) : (
+        <section className="public-focus">
+          {focusRoutes.map((route) => {
           const routeLocation = route.latitude && route.longitude ? [route] : [];
           return (
             <article
@@ -965,8 +990,9 @@ function PublicScreen() {
               <span className="expand-hint">Clic para pantalla completa</span>
             </article>
           );
-        })}
-      </section>
+          })}
+        </section>
+      )}
       <section className="public-list">
         {visibleRoutes.map((route) => (
           <article key={`${route.assignment_id || route.id}-${route.service_day || "all"}`} className="route-card">
