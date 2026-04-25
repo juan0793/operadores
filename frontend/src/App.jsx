@@ -1,5 +1,5 @@
 import { Activity, AlertTriangle, ClipboardList, History, KeyRound, LogOut, MapPin, Navigation, Play, Plus, Radio, Route, Trash2, UserCheck, UserPlus, Users } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { apiFetch, getApiUrl } from "./api.js";
 import { MonitorMap, RouteEditorMap } from "./components/MapViews.jsx";
@@ -675,9 +675,14 @@ function OperatorDashboard({ user }) {
   const [assignments, setAssignments] = useState([]);
   const [active, setActive] = useState(null);
   const [activeRoute, setActiveRoute] = useState(null);
+  const [currentLocation, setCurrentLocation] = useState(null);
+  const [operatorTrack, setOperatorTrack] = useState(null);
   const [watching, setWatching] = useState(false);
+  const [completing, setCompleting] = useState(false);
   const [message, setMessage] = useState("");
   const [offlineCount, setOfflineCount] = useState(() => JSON.parse(localStorage.getItem("rutas_pending_locations") || "[]").length);
+  const watchIdRef = useRef(null);
+  const socketRef = useRef(null);
 
   async function load() {
     const list = await apiFetch("/api/assignments");
@@ -690,7 +695,18 @@ function OperatorDashboard({ user }) {
   useEffect(() => {
     if (!active?.route_id) return;
     apiFetch(`/api/routes/${active.route_id}`).then(setActiveRoute).catch(() => {});
+    setCurrentLocation(null);
+    setOperatorTrack(null);
   }, [active?.route_id]);
+
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+      socketRef.current?.disconnect();
+    };
+  }, []);
 
   function readQueue() {
     return JSON.parse(localStorage.getItem("rutas_pending_locations") || "[]");
@@ -724,13 +740,15 @@ function OperatorDashboard({ user }) {
 
   function startGps() {
     if (!active) return;
+    if (watching) return;
     if (!navigator.geolocation) {
       setMessage("Este dispositivo no soporta GPS en el navegador.");
       return;
     }
     setWatching(true);
-    const socket = io(getApiUrl(), { auth: { token: localStorage.getItem("rutas_token") } });
-    navigator.geolocation.watchPosition(
+    setMessage("GPS activo. Transmitiendo ubicacion...");
+    socketRef.current = io(getApiUrl(), { auth: { token: localStorage.getItem("rutas_token") } });
+    watchIdRef.current = navigator.geolocation.watchPosition(
       (position) => {
         const payload = {
           assignment_id: active.id,
@@ -740,6 +758,27 @@ function OperatorDashboard({ user }) {
           speed: position.coords.speed,
           heading: position.coords.heading,
         };
+        const visualLocation = {
+          ...payload,
+          vehicle_name: active.vehicle_name || "Aguas de Choluteca",
+          operator_name: user.name,
+          route_name: active.route_name,
+          recorded_at: new Date().toISOString(),
+        };
+        setCurrentLocation(visualLocation);
+        setOperatorTrack((current) => {
+          const base = current || {
+            assignment_id: active.id,
+            route_id: active.route_id,
+            operator_id: user.id,
+            vehicle_name: active.vehicle_name || "Aguas de Choluteca",
+            operator_name: user.name,
+            route_name: active.route_name,
+            color: active.color || "#0f766e",
+            points: [],
+          };
+          return { ...base, points: [...base.points, visualLocation].slice(-80) };
+        });
 
         if (!navigator.onLine) {
           writeQueue([...readQueue(), payload]);
@@ -747,7 +786,11 @@ function OperatorDashboard({ user }) {
           return;
         }
 
-        socket.emit("operator:location", payload, (response) => {
+        socketRef.current?.emit("operator:location", payload, (response) => {
+          if (!response?.ok) {
+            setMessage(response?.message || "No se pudo transmitir la ubicacion.");
+            return;
+          }
           if (response?.location?.progress_percent !== undefined) {
             setActive((item) => ({ ...item, progress_percent: response.location.progress_percent, status: "in_progress" }));
           }
@@ -758,18 +801,38 @@ function OperatorDashboard({ user }) {
           }
         });
       },
-      () => setMessage("No se pudo obtener la ubicacion. Revisa permisos del navegador."),
+      () => {
+        setWatching(false);
+        setMessage("No se pudo obtener la ubicacion. Revisa permisos del navegador.");
+      },
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
     );
   }
 
   async function complete() {
-    await apiFetch(`/api/assignments/${active.id}/status`, {
-      method: "PATCH",
-      body: JSON.stringify({ status: "completed", progress_percent: 100 }),
-    });
-    setMessage("Ruta marcada como completada.");
-    await load();
+    if (!active) return;
+    setCompleting(true);
+    setMessage("");
+    try {
+      await apiFetch(`/api/assignments/${active.id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: "completed", progress_percent: 100 }),
+      });
+      if (watchIdRef.current !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+      socketRef.current?.disconnect();
+      socketRef.current = null;
+      setWatching(false);
+      setActive((item) => ({ ...item, status: "completed", progress_percent: 100 }));
+      setMessage("Ruta marcada como completada.");
+      await load();
+    } catch (error) {
+      setMessage(error.message || "No se pudo finalizar la ruta.");
+    } finally {
+      setCompleting(false);
+    }
   }
 
   return (
@@ -791,13 +854,19 @@ function OperatorDashboard({ user }) {
             <p>{dayLabel(active.service_day)}</p>
             <div className="progress"><span style={{ width: `${Number(active.progress_percent)}%` }} /></div>
             <p>{Number(active.progress_percent)}% reportado</p>
-            <button className="primary big" onClick={startGps} disabled={watching}><Play />{watching ? "GPS activo" : "Iniciar seguimiento"}</button>
-            <button className="ghost big" onClick={complete}>Finalizar ruta</button>
+            <button className="primary big" onClick={startGps} disabled={watching || active.status === "completed"}><Play />{watching ? "GPS activo" : "Iniciar seguimiento"}</button>
+            <button className="ghost big" onClick={complete} disabled={completing || !active || active.status === "completed"}>{completing ? "Finalizando..." : "Finalizar ruta"}</button>
           </div>
         )}
         {activeRoute && (
           <div className="operator-map">
-            <MonitorMap routes={[activeRoute]} locations={[]} tracks={[]} compact />
+            <MonitorMap
+              routes={[activeRoute]}
+              locations={currentLocation ? [currentLocation] : []}
+              tracks={operatorTrack ? [operatorTrack] : []}
+              compact
+              fitKey={`operator-route-${activeRoute.id}`}
+            />
           </div>
         )}
         {offlineCount > 0 && <p className="notice">{offlineCount} ubicaciones pendientes por sincronizar.</p>}

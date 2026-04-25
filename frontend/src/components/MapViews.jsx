@@ -107,15 +107,16 @@ function MapResizeFix() {
   return null;
 }
 
-function FitBounds({ points }) {
+function FitBounds({ points, enabled = true, fitKey = "" }) {
   const map = useMap();
   useEffect(() => {
+    if (!enabled) return;
     if (points.length > 1) {
       map.fitBounds(points.map((p) => [p.latitude, p.longitude]), { padding: [28, 28] });
     } else {
       map.fitBounds(cholutecaBounds, { padding: [18, 18] });
     }
-  }, [map, points]);
+  }, [map, enabled, fitKey]);
   return null;
 }
 
@@ -185,13 +186,14 @@ function PlanningLegend() {
 }
 
 export function RouteEditorMap({ points, markers = [], color = "#2563eb", selectedNeighborhood = "", onAddPoint, onRemovePoint, onAddMarker, onRemoveMarker, mode = "route" }) {
+  const editorFitKey = `${points.length}-${markers.length}-${points.at(-1)?.latitude || ""}-${points.at(-1)?.longitude || ""}`;
   return (
     <MapContainer className="map" center={points[0] ? [points[0].latitude, points[0].longitude] : cholutecaCenter} zoom={15} maxBounds={cholutecaBounds}>
       <TileLayer attribution={cityTiles.attribution} url={cityTiles.imageryUrl} maxZoom={20} />
       <TileLayer url={cityTiles.labelsUrl} maxZoom={20} pane="overlayPane" />
       <MapResizeFix />
       <ClickCollector onAddPoint={(point) => (mode === "marker" ? onAddMarker?.(point) : onAddPoint?.(point))} />
-      <FitBounds points={points.length ? points : markers} />
+      <FitBounds points={points.length ? points : markers} fitKey={editorFitKey} />
       <PlanningOverlays selectedNeighborhood={selectedNeighborhood} />
       <PlanningLegend />
       {points.length > 1 && <Polyline positions={points.map((p) => [p.latitude, p.longitude])} pathOptions={{ color, weight: 5 }} />}
@@ -216,15 +218,20 @@ export function RouteEditorMap({ points, markers = [], color = "#2563eb", select
   );
 }
 
-export function MonitorMap({ routes = [], locations = [], tracks = [], compact = false }) {
+export function MonitorMap({ routes = [], locations = [], tracks = [], compact = false, fitKey = "" }) {
   const routePoints = routes.flatMap((route) => route.points || []);
   const trackPoints = tracks.flatMap((track) => track.points || []);
+  const defaultFitKey = fitKey || [
+    routes.map((route) => route.assignment_id || route.id).join("-"),
+    locations.length,
+    tracks.map((track) => `${track.assignment_id}:${track.points?.length || 0}`).join("-"),
+  ].join("|");
   return (
     <MapContainer className={`map ${compact ? "map-compact" : "map-large"}`} center={cholutecaCenter} zoom={14} maxBounds={cholutecaBounds}>
       <TileLayer attribution={cityTiles.attribution} url={cityTiles.imageryUrl} maxZoom={20} />
       <TileLayer url={cityTiles.labelsUrl} maxZoom={20} pane="overlayPane" />
       <MapResizeFix />
-      <FitBounds points={routePoints.length ? routePoints : (trackPoints.length ? trackPoints : locations)} />
+      <FitBounds points={routePoints.length ? routePoints : (trackPoints.length ? trackPoints : locations)} fitKey={defaultFitKey} />
       {routes.map((route) =>
         route.points?.length > 1 ? (
           <Polyline
