@@ -184,8 +184,25 @@ Modo demo:
 
 1. Crear el proyecto de Railway desde el repositorio de GitHub.
 2. Agregar un servicio MySQL en el mismo proyecto.
-3. En el servicio backend, usar el root del repositorio `sistema-rutas-operadores`.
-4. Configurar estas variables en el backend:
+3. El archivo [railway.json](/c:/Users/kyubi/OneDrive/Documentos/app-clandestinos/sistema-rutas-operadores/railway.json) no define un `startCommand` global. En este monorepo, los comandos se configuran por servicio dentro de Railway.
+
+### Backend
+
+Usar el root directory vacio o la raiz del repositorio.
+
+Build Command:
+
+```bash
+npm --prefix backend install
+```
+
+Start Command:
+
+```bash
+npm --prefix backend run start:prod
+```
+
+Variables del backend:
 
 ```env
 NODE_ENV=production
@@ -198,12 +215,6 @@ JWT_SECRET=un_secreto_largo_y_privado
 JWT_EXPIRES_IN=8h
 DEVIATION_WARNING_METERS=80
 FRONTEND_URL=https://tu-frontend.up.railway.app
-```
-
-Railway ejecuta automaticamente:
-
-```bash
-npm --prefix backend run start:prod
 ```
 
 Ese comando primero corre `db:init` y despues levanta `src/server.js`. No es necesario usar HeidiSQL, MySQL Workbench, DBeaver ni pegar SQL manualmente.
@@ -240,22 +251,27 @@ Respuesta esperada:
 
 ### Frontend
 
-Crear otro servicio con root directory `sistema-rutas-operadores/frontend`.
+Usar root directory `frontend`.
 
-Variables:
+Build Command:
+
+```bash
+npm install && npm run build
+```
+
+Start Command:
+
+```bash
+npm run preview -- --host 0.0.0.0 --port $PORT
+```
+
+Variables del frontend:
 
 ```env
 VITE_API_URL=https://operadores-production.up.railway.app
 ```
 
-Comandos:
-
-```bash
-npm install
-npm run build
-```
-
-Directorio de salida:
+Directorio publicado:
 
 ```text
 dist
