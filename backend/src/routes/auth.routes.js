@@ -8,7 +8,7 @@ const router = Router();
 
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(4),
 });
 
 router.post("/login", async (req, res, next) => {
@@ -28,6 +28,21 @@ router.post("/login", async (req, res, next) => {
     if (!ok) return res.status(401).json({ message: "Credenciales invalidas" });
 
     const safeUser = { id: user.id, name: user.name, email: user.email, role: user.role };
+    if (user.role === "operador") {
+      const loginEvent = await query(
+        `insert into route_events (operator_id, event_type, notes)
+         values ($1, 'operator_login', $2)`,
+        [user.id, `El operador ${user.name} ha ingresado al sistema`]
+      );
+      req.app.get("io")?.to("monitor").emit("operator:login", {
+        id: loginEvent.rows.insertId,
+        operator_id: user.id,
+        operator_name: user.name,
+        event_type: "operator_login",
+        notes: `El operador ${user.name} ha ingresado al sistema`,
+        created_at: new Date().toISOString(),
+      });
+    }
     return res.json({ token: signToken(safeUser), user: safeUser });
   } catch (error) {
     return next(error);

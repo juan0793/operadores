@@ -119,6 +119,7 @@ function Shell({ user, onLogout, children }) {
         <div className="brand"><Route size={28} /><span>Rutas Operadores</span></div>
         <nav>
           <a href="#rutas"><MapPin size={18} />Rutas</a>
+          <a href="#operadores"><Users size={18} />Operadores</a>
           <a href="#monitoreo"><Radio size={18} />Monitoreo</a>
           <a href="#reportes"><ClipboardList size={18} />Reportes</a>
         </nav>
@@ -145,6 +146,7 @@ function AdminDashboard({ user }) {
   const [locations, setLocations] = useState([]);
   const [tracks, setTracks] = useState([]);
   const [warnings, setWarnings] = useState([]);
+  const [operatorEvents, setOperatorEvents] = useState([]);
   const [summary, setSummary] = useState(null);
   const [history, setHistory] = useState(null);
   const [form, setForm] = useState(emptyRoute);
@@ -176,6 +178,7 @@ function AdminDashboard({ user }) {
     setTracks(trackList);
     setSummary(report);
     setWarnings(eventList.filter((event) => event.event_type === "route_deviation"));
+    setOperatorEvents(eventList.filter((event) => event.event_type === "operator_login"));
   }
 
   useEffect(() => {
@@ -184,6 +187,9 @@ function AdminDashboard({ user }) {
     socket.on("location:updated", () => load());
     socket.on("route:warning", (warning) => {
       setWarnings((current) => [{ ...warning, created_at: new Date().toISOString() }, ...current].slice(0, 10));
+    });
+    socket.on("operator:login", (event) => {
+      setOperatorEvents((current) => [event, ...current].slice(0, 12));
     });
     return () => socket.disconnect();
   }, []);
@@ -429,7 +435,7 @@ function AdminDashboard({ user }) {
         </form>
       </section>
 
-      <section className="panel">
+      <section id="operadores" className="panel">
         <div className="panel-title"><Users /><h2>Asignar operador</h2></div>
         <form className="stack" onSubmit={assignRoute}>
           <span className="form-hint">Selecciona la ruta, el operador, el nombre visible del vehículo y el día de trabajo.</span>
@@ -464,7 +470,13 @@ function AdminDashboard({ user }) {
 
       {user.role === "administrador" && (
         <section className="panel wide">
-          <div className="panel-title"><UserCheck /><h2>Operadores registrados</h2></div>
+          <div className="panel-title"><UserCheck /><h2>Panel de operadores</h2></div>
+          <div className="operator-summary">
+            <span><strong>{operators.length}</strong> registrados</span>
+            <span><strong>{operators.filter((operator) => operator.is_active).length}</strong> activos</span>
+            <span><strong>{assignments.length}</strong> asignaciones</span>
+            <span><strong>{operatorEvents.length}</strong> ingresos recientes</span>
+          </div>
           {operators.length === 0 ? (
             <p className="muted">Todavia no hay operadores registrados.</p>
           ) : (
@@ -503,6 +515,22 @@ function AdminDashboard({ user }) {
           )}
         </section>
       )}
+
+      <section className="panel wide">
+        <div className="panel-title"><History /><h2>Ingresos de operadores</h2></div>
+        {operatorEvents.length === 0 ? (
+          <p className="muted">Aun no hay ingresos recientes de operadores.</p>
+        ) : (
+          <div className="operator-event-list">
+            {operatorEvents.slice(0, 12).map((event) => (
+              <article className="operator-event" key={`${event.id || event.operator_id}-${event.created_at}`}>
+                <strong>{event.notes || `El operador ${event.operator_name || event.operator_id} ha ingresado al sistema`}</strong>
+                <span>{event.created_at ? new Date(event.created_at).toLocaleString() : "Ahora"}</span>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="panel">
         <div className="panel-title"><Activity /><h2>Resumen</h2></div>
