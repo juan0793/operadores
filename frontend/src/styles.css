@@ -4,6 +4,8 @@
   background: #eef2f7;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.45;
 }
 
 * {
@@ -24,6 +26,11 @@ textarea {
 
 button {
   cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease, opacity 160ms ease;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 a {
@@ -56,7 +63,8 @@ a {
 .topbar h1,
 .mobile-header h1 {
   margin: 4px 0 8px;
-  line-height: 1.05;
+  line-height: 1.04;
+  letter-spacing: 0;
 }
 
 .login-panel h1 {
@@ -73,7 +81,7 @@ a {
   display: block;
   color: #14b8a6;
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 900;
   letter-spacing: 0;
   text-transform: uppercase;
 }
@@ -184,6 +192,7 @@ textarea {
   color: #075985;
   background: linear-gradient(135deg, #e0f2fe, #f8fafc);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  text-align: left;
 }
 
 .operator-notice strong {
@@ -326,11 +335,17 @@ textarea {
 }
 
 .panel-title {
+  min-height: 34px;
   margin-bottom: 14px;
 }
 
 .panel-title svg {
+  flex: 0 0 auto;
   color: #0f766e;
+}
+
+.panel-title h2 {
+  line-height: 1.15;
 }
 
 .route-form {
@@ -435,10 +450,13 @@ textarea {
 
 .map-dashboard span {
   display: grid;
+  place-items: center;
+  gap: 4px;
   padding: 12px;
   border-radius: 8px;
   color: #0f172a;
   background: #e0f2fe;
+  text-align: center;
 }
 
 .map-dashboard strong {
@@ -758,11 +776,13 @@ td {
 
 .operator-summary span {
   display: grid;
+  place-items: center;
   gap: 3px;
   padding: 12px;
   border-radius: 8px;
   color: #334155;
   background: #eef6f4;
+  text-align: center;
 }
 
 .operator-summary strong {
@@ -851,6 +871,12 @@ td {
   background: #f8fafc;
 }
 
+.vehicle-card strong {
+  justify-self: end;
+  min-width: 58px;
+  text-align: right;
+}
+
 .vehicle-card h3,
 .vehicle-card p {
   margin: 6px 0 0;
@@ -917,6 +943,7 @@ td {
 .operator-map-head span {
   color: #64748b;
   font-size: 0.9rem;
+  line-height: 1.35;
 }
 
 .live-pill {
@@ -1044,6 +1071,7 @@ td {
   color: #dbeafe;
   background: rgba(15, 23, 42, 0.72);
   font-weight: 850;
+  text-align: center;
 }
 
 .public-map {
@@ -1101,6 +1129,7 @@ td {
   border-radius: 8px;
   color: #cbd5e1;
   background: rgba(15, 23, 42, 0.7);
+  text-align: center;
 }
 
 .public-live-stats strong {

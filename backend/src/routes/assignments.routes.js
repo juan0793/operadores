@@ -58,7 +58,7 @@ router.patch("/:id/status", async (req, res, next) => {
 
     const allowed = ["administrador", "supervisor"].includes(req.user.role);
     const mine = await query("select * from route_assignments where id = $1", [req.params.id]);
-    if (!mine.rows[0]) return res.status(404).json({ message: "Asignacion no encontrada" });
+    if (!mine.rows[0]) return res.status(404).json({ message: "Asignación no encontrada" });
     if (!allowed && mine.rows[0].operator_id !== req.user.id) {
       return res.status(403).json({ message: "No autorizado" });
     }

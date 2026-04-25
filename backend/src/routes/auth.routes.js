@@ -21,11 +21,11 @@ router.post("/login", async (req, res, next) => {
     const user = result.rows[0];
 
     if (!user || !user.is_active) {
-      return res.status(401).json({ message: "Credenciales invalidas" });
+      return res.status(401).json({ message: "Credenciales inválidas" });
     }
 
     const ok = await bcrypt.compare(data.password, user.password_hash);
-    if (!ok) return res.status(401).json({ message: "Credenciales invalidas" });
+    if (!ok) return res.status(401).json({ message: "Credenciales inválidas" });
 
     const safeUser = { id: user.id, name: user.name, email: user.email, role: user.role };
     if (user.role === "operador") {

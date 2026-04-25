@@ -90,7 +90,7 @@ const planningZones = [
 
 const municipalGuides = [
   {
-    name: "Linea guia Choluteca - Yusguare",
+    name: "Línea guía Choluteca - Yusguare",
     color: "#f59e0b",
     points: [[13.35, -87.158], [13.331, -87.151], [13.312, -87.143], [13.292, -87.132], [13.273, -87.121]],
   },
@@ -103,7 +103,7 @@ const municipalGuides = [
 
 const cityLandmarks = [
   { name: "Parque Central de Choluteca", type: "Referencia central", position: [13.3029, -87.1907] },
-  { name: "Catedral de Choluteca", type: "Referencia historica", position: [13.3038, -87.1902] },
+  { name: "Catedral de Choluteca", type: "Referencia histórica", position: [13.3038, -87.1902] },
   { name: "Puente Choluteca", type: "Referencia vial", position: [13.3007, -87.2022] },
   { name: "Mercado Municipal", type: "Zona comercial", position: [13.3064, -87.1938] },
   { name: "Hospital del Sur", type: "Referencia de emergencia", position: [13.2962, -87.1878] },
@@ -188,7 +188,7 @@ function PlanningLegend() {
     legend.onAdd = () => {
       const container = L.DomUtil.create("div", "map-guide-legend");
       container.innerHTML = `
-        <strong>Guias de ordenamiento</strong>
+        <strong>Guías de ordenamiento</strong>
         <span><i style="background:#0f766e"></i>Barrios / colonias</span>
         <span><i style="background:#0ea5e9"></i>Lugares de referencia</span>
         <span><i style="background:#f59e0b"></i>Choluteca - Yusguare</span>

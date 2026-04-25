@@ -18,10 +18,10 @@ const emptyRoute = {
 const weekDays = [
   { value: "lunes", label: "Lunes" },
   { value: "martes", label: "Martes" },
-  { value: "miercoles", label: "Miercoles" },
+  { value: "miercoles", label: "Miércoles" },
   { value: "jueves", label: "Jueves" },
   { value: "viernes", label: "Viernes" },
-  { value: "sabado", label: "Sabado" },
+  { value: "sabado", label: "Sábado" },
   { value: "domingo", label: "Domingo" },
 ];
 
@@ -39,7 +39,7 @@ const baseNeighborhoods = [
 ];
 
 function dayLabel(day) {
-  return weekDays.find((item) => item.value === day)?.label || day || "Sin dia";
+  return weekDays.find((item) => item.value === day)?.label || day || "Sin día";
 }
 
 function getTodayServiceDay() {
@@ -103,14 +103,14 @@ function Login({ onLogin }) {
         <div>
           <span className="eyebrow">Sistema independiente</span>
           <h1>Rutas de operadores</h1>
-          <p>Planificacion, asignacion, seguimiento GPS y visualizacion publica de avances.</p>
+          <p>Planificación, asignación, seguimiento GPS y visualización pública de avances.</p>
         </div>
         <form onSubmit={submit} className="stack">
           <label>Correo<input value={email} onChange={(e) => setEmail(e.target.value)} /></label>
-          <label>Contrasena<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} /></label>
+          <label>Contraseña<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} /></label>
           {error && <p className="error">{error}</p>}
           <button className="primary" type="submit">Entrar</button>
-          <a className="public-link" href="/public">Abrir pantalla publica</a>
+          <a className="public-link" href="/public">Abrir pantalla pública</a>
         </form>
       </section>
     </main>
@@ -318,10 +318,10 @@ function AdminDashboard({ user }) {
   }
 
   async function resetOperatorPassword(operator) {
-    const password = window.prompt(`Nueva contrasena temporal para ${operator.name}`, "Rutas123");
+    const password = window.prompt(`Nueva contraseña temporal para ${operator.name}`, "Rutas123");
     if (!password) return;
     if (password.length < 4) {
-      setActionMessage({ type: "error", text: "La contrasena temporal debe tener al menos 4 caracteres." });
+      setActionMessage({ type: "error", text: "La contraseña temporal debe tener al menos 4 caracteres." });
       return;
     }
 
@@ -339,7 +339,7 @@ function AdminDashboard({ user }) {
           password,
         }),
       });
-      setActionMessage({ type: "success", text: `Contrasena temporal actualizada para ${operator.name}.` });
+      setActionMessage({ type: "success", text: `Contraseña temporal actualizada para ${operator.name}.` });
       await load();
     } catch (error) {
       setActionMessage({ type: "error", text: error.message });
@@ -403,8 +403,8 @@ function AdminDashboard({ user }) {
           {selectedNeighborhoodOption === "__manual__" && (
             <label className="span-2">Nuevo barrio o colonia<input value={form.neighborhood} onChange={(e) => setForm({ ...form, neighborhood: e.target.value })} placeholder="Ej. Colonia nueva" /></label>
           )}
-          <label className="span-2">Descripcion<textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
-          <label className="check"><input type="checkbox" checked={form.is_public} onChange={(e) => setForm({ ...form, is_public: e.target.checked })} />Visible al publico</label>
+          <label className="span-2">Descripción<textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
+          <label className="check"><input type="checkbox" checked={form.is_public} onChange={(e) => setForm({ ...form, is_public: e.target.checked })} />Visible al público</label>
           <div className="marker-tools span-2">
             <div className="segmented">
               <button type="button" className={mapMode === "route" ? "active" : ""} onClick={() => setMapMode("route")}>Trazar ruta</button>
@@ -416,7 +416,7 @@ function AdminDashboard({ user }) {
               <option value="inicio">Inicio</option>
               <option value="fin">Fin</option>
               <option value="parada">Parada</option>
-              <option value="punto_critico">Punto critico</option>
+              <option value="punto_critico">Punto crítico</option>
             </select>
           </div>
           <div className="span-2 editor-map">
@@ -452,7 +452,7 @@ function AdminDashboard({ user }) {
             <option value="">Seleccionar operador</option>
             {operators.map((op) => <option key={op.id} value={op.id}>{op.name}</option>)}
           </select>
-          <input value={selectedVehicleName} onChange={(e) => setSelectedVehicleName(e.target.value)} placeholder="Nombre del vehiculo" required />
+          <input value={selectedVehicleName} onChange={(e) => setSelectedVehicleName(e.target.value)} placeholder="Nombre del vehículo" required />
           <select value={selectedDay} onChange={(e) => setSelectedDay(e.target.value)} required>
             {weekDays.map((day) => <option key={day.value} value={day.value}>{day.label}</option>)}
           </select>
@@ -466,8 +466,8 @@ function AdminDashboard({ user }) {
           <form className="stack" onSubmit={createOperator}>
             <label>Nombre<input value={operatorForm.name} onChange={(e) => setOperatorForm({ ...operatorForm, name: e.target.value })} placeholder="Nombre del operador" required /></label>
             <label>Correo<input type="email" value={operatorForm.email} onChange={(e) => setOperatorForm({ ...operatorForm, email: e.target.value })} placeholder="correo@ejemplo.com" required /></label>
-            <label>Telefono<input value={operatorForm.phone} onChange={(e) => setOperatorForm({ ...operatorForm, phone: e.target.value })} placeholder="Telefono" /></label>
-            <label>Contrasena temporal<input value={operatorForm.password} minLength={4} onChange={(e) => setOperatorForm({ ...operatorForm, password: e.target.value })} placeholder="Minimo 4 caracteres" required /></label>
+            <label>Teléfono<input value={operatorForm.phone} onChange={(e) => setOperatorForm({ ...operatorForm, phone: e.target.value })} placeholder="Teléfono" /></label>
+            <label>Contraseña temporal<input value={operatorForm.password} minLength={4} onChange={(e) => setOperatorForm({ ...operatorForm, password: e.target.value })} placeholder="Mínimo 4 caracteres" required /></label>
             <button className="primary" disabled={busyAction === "createOperator"}>{busyAction === "createOperator" ? "Creando..." : "Crear operador"}</button>
           </form>
         </section>
@@ -483,7 +483,7 @@ function AdminDashboard({ user }) {
             <span><strong>{operatorEvents.length}</strong> ingresos recientes</span>
           </div>
           {operators.length === 0 ? (
-            <p className="muted">Todavia no hay operadores registrados.</p>
+            <p className="muted">Todavía no hay operadores registrados.</p>
           ) : (
             <div className="operator-management-grid">
               {operators.map((operator) => (
@@ -494,7 +494,7 @@ function AdminDashboard({ user }) {
                     </span>
                     <h3>{operator.name}</h3>
                     <p>{operator.email}</p>
-                    <small>{operator.phone || "Sin telefono"} - Alta {new Date(operator.created_at).toLocaleDateString()}</small>
+                    <small>{operator.phone || "Sin teléfono"} - Alta {new Date(operator.created_at).toLocaleDateString()}</small>
                   </div>
                   <div className="operator-actions">
                     <button
@@ -524,7 +524,7 @@ function AdminDashboard({ user }) {
       <section className="panel wide">
         <div className="panel-title"><History /><h2>Ingresos de operadores</h2></div>
         {operatorEvents.length === 0 ? (
-          <p className="muted">Aun no hay ingresos recientes de operadores.</p>
+          <p className="muted">Aún no hay ingresos recientes de operadores.</p>
         ) : (
           <div className="operator-event-list">
             {operatorEvents.slice(0, 12).map((event) => (
@@ -550,7 +550,7 @@ function AdminDashboard({ user }) {
       </section>
 
       <section className="panel wide">
-        <div className="panel-title"><ClipboardList /><h2>Programacion semanal</h2></div>
+        <div className="panel-title"><ClipboardList /><h2>Programación semanal</h2></div>
         <div className="week-grid">
           {assignmentsByDay.map((day) => (
             <article className="day-column" key={day.value}>
@@ -572,7 +572,7 @@ function AdminDashboard({ user }) {
       <section id="monitoreo" className="panel wide">
         <div className="panel-title"><Radio /><h2>Monitoreo en tiempo real</h2></div>
         <div className="map-dashboard">
-          <span><strong>{locations.length}</strong> vehiculos activos</span>
+          <span><strong>{locations.length}</strong> vehículos activos</span>
           <span><strong>{routes.length}</strong> rutas</span>
           <span><strong>{warnings.length}</strong> alertas</span>
           <span><strong>{tracks.reduce((total, track) => total + (track.points?.length || 0), 0)}</strong> puntos GPS</span>
@@ -581,7 +581,7 @@ function AdminDashboard({ user }) {
       </section>
 
       <section className="panel wide">
-        <div className="panel-title"><Navigation /><h2>Vehiculos asignados</h2></div>
+        <div className="panel-title"><Navigation /><h2>Vehículos asignados</h2></div>
         <div className="vehicle-grid">
           {assignments.map((assignment) => {
             const latest = locations.find((location) => Number(location.assignment_id) === Number(assignment.id));
@@ -602,16 +602,16 @@ function AdminDashboard({ user }) {
       </section>
 
       <section className="panel wide">
-        <div className="panel-title warning-title"><AlertTriangle /><h2>Alertas de desvio</h2></div>
+        <div className="panel-title warning-title"><AlertTriangle /><h2>Alertas de desvío</h2></div>
         {warnings.length === 0 ? (
-          <p className="muted">Sin alertas de desvio registradas.</p>
+          <p className="muted">Sin alertas de desvío registradas.</p>
         ) : (
           <div className="warning-list">
             {warnings.slice(0, 8).map((warning, index) => (
               <article className="warning-card" key={`${warning.id || warning.assignment_id}-${warning.created_at || index}`}>
                 <div className="warning-icon"><AlertTriangle size={20} /></div>
                 <div>
-                  <span className="warning-kicker">Desvio detectado</span>
+                  <span className="warning-kicker">Desvío detectado</span>
                   <strong>{warning.route_name || `Ruta #${warning.route_id}`}</strong>
                   <p>{warning.notes || warning.message || "Operador fuera de la ruta marcada."}</p>
                   <small>{warning.operator_name || `Operador #${warning.operator_id}`} - {warning.created_at ? new Date(warning.created_at).toLocaleString() : "Ahora"}</small>
@@ -626,7 +626,7 @@ function AdminDashboard({ user }) {
         <div className="panel-title"><ClipboardList /><h2>Historial</h2></div>
         <div className="table-wrap">
           <table>
-            <thead><tr><th>Ruta</th><th>Barrio</th><th>Vehiculo</th><th>Operador</th><th>Dia</th><th>Estado</th><th>Avance</th><th>Asignada</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>Ruta</th><th>Barrio</th><th>Vehículo</th><th>Operador</th><th>Día</th><th>Estado</th><th>Avance</th><th>Asignada</th><th>Acciones</th></tr></thead>
             <tbody>
               {assignments.map((item) => (
                 <tr key={item.id}>
@@ -700,6 +700,25 @@ function OperatorDashboard({ user }) {
 
   useEffect(() => { load(); }, []);
 
+  function connectOperatorSocket() {
+    if (socketRef.current && !socketRef.current.disconnected) return socketRef.current;
+    const socket = io(getApiUrl(), { auth: { token: localStorage.getItem("rutas_token") } });
+    socket.on("operator:warning", (warning) => {
+      setOperatorNotice({
+        type: "warning",
+        title: "Desvío de ruta",
+        text: `Estás a ${warning.distance_meters} m de la ruta establecida. Revisa el mapa y vuelve al tramo marcado.`,
+      });
+    });
+    socketRef.current = socket;
+    return socket;
+  }
+
+  useEffect(() => {
+    connectOperatorSocket();
+    return () => socketRef.current?.disconnect();
+  }, []);
+
   useEffect(() => {
     if (!active?.route_id) return;
     apiFetch(`/api/routes/${active.route_id}`).then(setActiveRoute).catch(() => {});
@@ -754,8 +773,8 @@ function OperatorDashboard({ user }) {
       return;
     }
     setWatching(true);
-    setOperatorNotice({ type: "info", title: "GPS activo", text: "Transmitiendo ubicacion en tiempo real." });
-    socketRef.current = io(getApiUrl(), { auth: { token: localStorage.getItem("rutas_token") } });
+    setOperatorNotice({ type: "info", title: "GPS activo", text: "Transmitiendo ubicación en tiempo real." });
+    connectOperatorSocket();
     watchIdRef.current = navigator.geolocation.watchPosition(
       (position) => {
         const payload = {
@@ -790,28 +809,28 @@ function OperatorDashboard({ user }) {
 
         if (!navigator.onLine) {
           writeQueue([...readQueue(), payload]);
-          setOperatorNotice({ type: "warning", title: "Sin internet", text: "Ubicacion guardada para sincronizar luego." });
+          setOperatorNotice({ type: "warning", title: "Sin internet", text: "Ubicación guardada para sincronizar luego." });
           return;
         }
 
         socketRef.current?.emit("operator:location", payload, (response) => {
           if (!response?.ok) {
-            setOperatorNotice({ type: "error", title: "No se transmitio", text: response?.message || "No se pudo transmitir la ubicacion." });
+            setOperatorNotice({ type: "error", title: "No se transmitió", text: response?.message || "No se pudo transmitir la ubicación." });
             return;
           }
           if (response?.location?.progress_percent !== undefined) {
             setActive((item) => ({ ...item, progress_percent: response.location.progress_percent, status: "in_progress" }));
           }
           if (response?.location?.warning) {
-            setOperatorNotice({ type: "warning", title: "Fuera de ruta", text: `Estas a ${response.location.warning.distance_meters} m de la ruta establecida.` });
+            setOperatorNotice({ type: "warning", title: "Fuera de ruta", text: `Estás a ${response.location.warning.distance_meters} m de la ruta establecida.` });
           } else {
-            setOperatorNotice({ type: "success", title: "Ubicacion enviada", text: "Movimiento actualizado en el mapa." });
+            setOperatorNotice({ type: "success", title: "Ubicación enviada", text: "Movimiento actualizado en el mapa." });
           }
         });
       },
       () => {
         setWatching(false);
-        setOperatorNotice({ type: "error", title: "GPS no disponible", text: "No se pudo obtener la ubicacion. Revisa permisos del navegador." });
+        setOperatorNotice({ type: "error", title: "GPS no disponible", text: "No se pudo obtener la ubicación. Revisa permisos del navegador." });
       },
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
     );
@@ -834,7 +853,7 @@ function OperatorDashboard({ user }) {
       socketRef.current = null;
       setWatching(false);
       setActive((item) => ({ ...item, status: "completed", progress_percent: 100 }));
-      setOperatorNotice({ type: "success", title: "Ruta finalizada", text: "La ruta se marco como completada correctamente." });
+      setOperatorNotice({ type: "success", title: "Ruta finalizada", text: "La ruta se marcó como completada correctamente." });
       await load();
     } catch (error) {
       setOperatorNotice({ type: "error", title: "No se pudo finalizar", text: error.message || "No se pudo finalizar la ruta." });
@@ -871,7 +890,7 @@ function OperatorDashboard({ user }) {
             <div className="operator-map-head">
               <div>
                 <strong>Mapa en vivo</strong>
-                <span>Usa + y - para acercar o alejar. La linea celeste muestra tu recorrido real.</span>
+                <span>Usa + y - para acercar o alejar. La línea celeste muestra tu recorrido real.</span>
               </div>
               <span className={watching ? "live-pill active" : "live-pill"}>{watching ? "GPS transmitiendo" : "GPS detenido"}</span>
             </div>
@@ -944,14 +963,14 @@ function PublicScreen() {
             <span className="public-city-pill">Ciudad de Choluteca</span>
           </div>
           <h1>Avance de rutas en tiempo real de Choluteca</h1>
-          <p>Tablero publico de monitoreo municipal. Mostrando {selectedDayLabel.toLowerCase()} con actualizacion automatica.</p>
+          <p>Tablero público de monitoreo municipal. Mostrando {selectedDayLabel.toLowerCase()} con actualización automática.</p>
         </div>
         <div className="public-date-card">
           <span>{dayLabel(todayServiceDay)}</span>
           <strong>{new Date().toLocaleDateString()}</strong>
         </div>
       </header>
-      <section className="public-context-strip" aria-label="Resumen del tablero publico">
+      <section className="public-context-strip" aria-label="Resumen del tablero público">
         <span>Municipio de Choluteca</span>
         <span>Cobertura ciudadana en tiempo real</span>
         <span>Sin datos sensibles de operadores</span>
@@ -975,8 +994,8 @@ function PublicScreen() {
       {focusRoutes.length === 0 ? (
         <section className="public-empty-state">
           <span className="eyebrow">Sin rutas visibles</span>
-          <h2>No hay rutas publicas programadas para {selectedDayLabel.toLowerCase()}.</h2>
-          <p>Puede revisar el tablero semanal completo o seleccionar otro dia.</p>
+          <h2>No hay rutas públicas programadas para {selectedDayLabel.toLowerCase()}.</h2>
+          <p>Puede revisar el tablero semanal completo o seleccionar otro día.</p>
           <button type="button" onClick={() => setSelectedPublicDay("todos")}>Ver toda la semana</button>
         </section>
       ) : (

@@ -5,7 +5,7 @@ const users = [
   ["Administrador", "admin@rutas.local", "administrador"],
   ["Supervisor", "supervisor@rutas.local", "supervisor"],
   ["Operador Campo", "operador@rutas.local", "operador"],
-  ["Pantalla Publica", "publico@rutas.local", "publico"],
+  ["Pantalla Pública", "publico@rutas.local", "publico"],
 ];
 
 async function seed() {

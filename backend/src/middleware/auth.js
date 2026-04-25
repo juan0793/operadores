@@ -14,14 +14,14 @@ export function authenticate(req, res, next) {
   const token = header.startsWith("Bearer ") ? header.slice(7) : null;
 
   if (!token) {
-    return res.status(401).json({ message: "Sesion requerida" });
+    return res.status(401).json({ message: "Sesión requerida" });
   }
 
   try {
     req.user = jwt.verify(token, config.jwtSecret);
     return next();
   } catch {
-    return res.status(401).json({ message: "Sesion invalida o expirada" });
+    return res.status(401).json({ message: "Sesión inválida o expirada" });
   }
 }
 
@@ -37,7 +37,7 @@ export function authorize(...roles) {
 export function authenticateSocket(socket, next) {
   const token = socket.handshake.auth?.token;
   if (!token) {
-    socket.user = { id: null, role: "publico", name: "Pantalla Publica" };
+    socket.user = { id: null, role: "publico", name: "Pantalla Pública" };
     return next();
   }
 
@@ -45,6 +45,6 @@ export function authenticateSocket(socket, next) {
     socket.user = jwt.verify(token, config.jwtSecret);
     return next();
   } catch {
-    return next(new Error("Sesion invalida"));
+    return next(new Error("Sesión inválida"));
   }
 }

@@ -23,7 +23,7 @@ const initialUsers = [
   { name: "Administrador", email: "admin@rutas.local", role: "administrador" },
   { name: "Supervisor", email: "supervisor@rutas.local", role: "supervisor" },
   { name: "Operador Campo", email: "operador@rutas.local", role: "operador" },
-  { name: "Pantalla Publica", email: "publico@rutas.local", role: "publico" },
+  { name: "Pantalla Pública", email: "publico@rutas.local", role: "publico" },
 ];
 
 function env(primary, fallback) {

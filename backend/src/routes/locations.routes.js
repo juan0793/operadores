@@ -28,7 +28,7 @@ const vehicleLocationSchema = z.object({
 
 export async function saveLocation(user, data) {
   const assignment = await query("select * from route_assignments where id = $1", [data.assignment_id]);
-  if (!assignment.rows[0]) throw Object.assign(new Error("Asignacion no encontrada"), { statusCode: 404 });
+  if (!assignment.rows[0]) throw Object.assign(new Error("Asignación no encontrada"), { statusCode: 404 });
   if (user.role === "operador" && assignment.rows[0].operator_id !== user.id) {
     throw Object.assign(new Error("No autorizado"), { statusCode: 403 });
   }
@@ -122,7 +122,7 @@ router.post("/vehicle-gps", async (req, res, next) => {
     }
     const providedKey = req.headers["x-api-key"];
     if (providedKey !== config.gpsIngestApiKey) {
-      return res.status(401).json({ message: "API key invalida" });
+      return res.status(401).json({ message: "API key inválida" });
     }
 
     const data = vehicleLocationSchema.parse(req.body);
@@ -137,7 +137,7 @@ router.post("/vehicle-gps", async (req, res, next) => {
       [data.vehicle_name]
     );
     if (!assignment.rows[0]) {
-      return res.status(404).json({ message: "No hay asignacion activa para ese vehiculo" });
+      return res.status(404).json({ message: "No hay asignación activa para ese vehículo" });
     }
 
     const location = await saveLocation(
@@ -145,7 +145,10 @@ router.post("/vehicle-gps", async (req, res, next) => {
       { assignment_id: assignment.rows[0].id, ...data }
     );
     req.app.get("io")?.to("monitor").emit("location:updated", location);
-    if (location.warning) req.app.get("io")?.to("monitor").emit("route:warning", location.warning);
+    if (location.warning) {
+      req.app.get("io")?.to("monitor").emit("route:warning", location.warning);
+      req.app.get("io")?.to(`operator:${location.warning.operator_id}`).emit("operator:warning", location.warning);
+    }
     req.app.get("io")?.to("public").emit("public:updated");
     res.status(201).json(location);
   } catch (error) {
@@ -160,7 +163,10 @@ router.post("/", async (req, res, next) => {
     const data = locationSchema.parse(req.body);
     const location = await saveLocation(req.user, data);
     req.app.get("io")?.to("monitor").emit("location:updated", location);
-    if (location.warning) req.app.get("io")?.to("monitor").emit("route:warning", location.warning);
+    if (location.warning) {
+      req.app.get("io")?.to("monitor").emit("route:warning", location.warning);
+      req.app.get("io")?.to(`operator:${location.warning.operator_id}`).emit("operator:warning", location.warning);
+    }
     req.app.get("io")?.to("public").emit("public:updated");
     res.status(201).json(location);
   } catch (error) {
