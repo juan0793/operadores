@@ -1,6 +1,6 @@
 import L from "leaflet";
 import { Fragment, useEffect } from "react";
-import { MapContainer, Marker, Polygon, Polyline, Popup, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
+import { CircleMarker, MapContainer, Marker, Polygon, Polyline, Popup, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
 
 const markerIcon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -316,13 +316,20 @@ export function MonitorMap({ routes = [], locations = [], tracks = [], compact =
         ) : null
       )}
       {locations.map((loc) => (
-        <Marker key={`${loc.assignment_id}-${loc.recorded_at || loc.last_location_at}`} position={[Number(loc.latitude), Number(loc.longitude)]} icon={createVehicleIcon(loc.vehicle_name, loc.heading)}>
-          <Popup>
-            <strong>{loc.vehicle_name || "Aguas de Choluteca"}</strong>
-            <span>{loc.operator_name || "Operador"}</span>
-            <span>{loc.route_name || loc.name}</span>
-          </Popup>
-        </Marker>
+        <Fragment key={`${loc.assignment_id}-${loc.recorded_at || loc.last_location_at}`}>
+          <CircleMarker
+            center={[Number(loc.latitude), Number(loc.longitude)]}
+            radius={compact ? 13 : 16}
+            pathOptions={{ color: "#22c55e", fillColor: "#22c55e", fillOpacity: 0.22, opacity: 0.65, weight: 2 }}
+          />
+          <Marker position={[Number(loc.latitude), Number(loc.longitude)]} icon={createVehicleIcon(loc.vehicle_name, loc.heading)}>
+            <Popup>
+              <strong>{loc.vehicle_name || "Aguas de Choluteca"}</strong>
+              <span>{loc.operator_name || "Operador"}</span>
+              <span>{loc.route_name || loc.name}</span>
+            </Popup>
+          </Marker>
+        </Fragment>
       ))}
     </MapContainer>
   );

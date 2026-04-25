@@ -118,15 +118,43 @@ function Login({ onLogin }) {
 }
 
 function Shell({ user, onLogout, children }) {
+  const [activeSection, setActiveSection] = useState("rutas");
+  const menuItems = [
+    { id: "rutas", label: "Rutas", hint: "Trazado", icon: MapPin },
+    { id: "operadores", label: "Operadores", hint: "Asignación", icon: Users },
+    { id: "monitoreo", label: "Monitoreo", hint: "En vivo", icon: Radio },
+    { id: "reportes", label: "Reportes", hint: "Analítica", icon: ClipboardList },
+  ];
+
+  useEffect(() => {
+    const sections = menuItems.map((item) => document.getElementById(item.id)).filter(Boolean);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible?.target?.id) setActiveSection(visible.target.id);
+      },
+      { rootMargin: "-20% 0px -65% 0px", threshold: [0.1, 0.35, 0.6] }
+    );
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand"><Route size={28} /><span>Rutas Operadores</span></div>
-        <nav>
-          <a href="#rutas"><MapPin size={18} />Rutas</a>
-          <a href="#operadores"><Users size={18} />Operadores</a>
-          <a href="#monitoreo"><Radio size={18} />Monitoreo</a>
-          <a href="#reportes"><ClipboardList size={18} />Reportes</a>
+        <div className="brand"><Route size={28} /><span>Rutas Operadores</span><small>Choluteca</small></div>
+        <nav className="dynamic-menu">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <a key={item.id} className={activeSection === item.id ? "active" : ""} href={`#${item.id}`}>
+                <Icon size={18} />
+                <span>{item.label}<small>{item.hint}</small></span>
+              </a>
+            );
+          })}
         </nav>
         <button className="ghost" onClick={onLogout}><LogOut size={18} />Salir</button>
       </aside>
@@ -211,6 +239,46 @@ function AdminDashboard({ user }) {
       assignments: assignments.filter((assignment) => assignment.service_day === day.value),
     }));
   }, [assignments]);
+  const reportStats = useMemo(() => {
+    const completed = assignments.filter((assignment) => assignment.status === "completed");
+    const durations = completed
+      .map((assignment) => {
+        if (!assignment.started_at || !assignment.completed_at) return null;
+        return (new Date(assignment.completed_at).getTime() - new Date(assignment.started_at).getTime()) / 60000;
+      })
+      .filter((value) => Number.isFinite(value) && value >= 0);
+    const averageMinutes = durations.length ? Math.round(durations.reduce((total, value) => total + value, 0) / durations.length) : 0;
+    const gpsPoints = tracks.reduce((total, track) => total + (track.points?.length || 0), 0);
+    const byStatus = ["assigned", "in_progress", "completed", "cancelled"].map((status) => ({
+      status,
+      label: statusLabel(status),
+      count: assignments.filter((assignment) => assignment.status === status).length,
+    }));
+    const byOperator = operators.map((operator) => {
+      const ownAssignments = assignments.filter((assignment) => Number(assignment.operator_id) === Number(operator.id));
+      const ownWarnings = warnings.filter((warning) => Number(warning.operator_id) === Number(operator.id));
+      const progress = ownAssignments.length
+        ? Math.round(ownAssignments.reduce((total, assignment) => total + Number(assignment.progress_percent || 0), 0) / ownAssignments.length)
+        : 0;
+      return { ...operator, assignments: ownAssignments.length, warnings: ownWarnings.length, progress };
+    }).sort((a, b) => b.assignments - a.assignments || b.progress - a.progress);
+    const byRoute = assignments
+      .map((assignment) => ({
+        id: assignment.id,
+        name: assignment.route_name,
+        operator: assignment.operator_name,
+        day: assignment.service_day,
+        progress: Number(assignment.progress_percent || 0),
+        status: assignment.status,
+      }))
+      .sort((a, b) => b.progress - a.progress)
+      .slice(0, 8);
+    const hourly = Array.from({ length: 24 }, (_, hour) => ({
+      hour,
+      count: locations.filter((location) => new Date(location.recorded_at || location.last_location_at || Date.now()).getHours() === hour).length,
+    }));
+    return { completed: completed.length, averageMinutes, gpsPoints, byStatus, byOperator, byRoute, hourly };
+  }, [assignments, locations, operators, tracks, warnings]);
 
   async function saveRoute(event) {
     event.preventDefault();
@@ -623,7 +691,77 @@ function AdminDashboard({ user }) {
       </section>
 
       <section id="reportes" className="panel wide">
-        <div className="panel-title"><ClipboardList /><h2>Historial</h2></div>
+        <div className="panel-title"><ClipboardList /><h2>Reportes estadísticos</h2></div>
+        <div className="report-hero">
+          <article><span>Rutas completadas</span><strong>{reportStats.completed}</strong><small>{assignments.length} asignaciones totales</small></article>
+          <article><span>Tiempo promedio</span><strong>{reportStats.averageMinutes} min</strong><small>Inicio a finalización</small></article>
+          <article><span>Puntos GPS</span><strong>{reportStats.gpsPoints}</strong><small>Últimas 12 horas</small></article>
+          <article><span>Alertas</span><strong>{warnings.length}</strong><small>Desvíos recientes</small></article>
+        </div>
+        <div className="report-grid">
+          <article className="report-card">
+            <h3>Asignaciones por día</h3>
+            <div className="bar-list">
+              {assignmentsByDay.map((day) => {
+                const max = Math.max(...assignmentsByDay.map((item) => item.assignments.length), 1);
+                return (
+                  <span key={`report-day-${day.value}`}>
+                    <small>{day.label}</small>
+                    <i style={{ width: `${Math.max((day.assignments.length / max) * 100, 4)}%` }} />
+                    <strong>{day.assignments.length}</strong>
+                  </span>
+                );
+              })}
+            </div>
+          </article>
+          <article className="report-card">
+            <h3>Estado operativo</h3>
+            <div className="donut-list">
+              {reportStats.byStatus.map((item) => (
+                <span key={`status-${item.status}`}>
+                  <i className={`status-dot ${item.status}`} />
+                  {item.label}
+                  <strong>{item.count}</strong>
+                </span>
+              ))}
+            </div>
+          </article>
+          <article className="report-card">
+            <h3>Operadores</h3>
+            <div className="ranking-list">
+              {reportStats.byOperator.slice(0, 6).map((operator) => (
+                <span key={`operator-report-${operator.id}`}>
+                  <strong>{operator.name}</strong>
+                  <small>{operator.assignments} rutas · {operator.progress}% promedio · {operator.warnings} alertas</small>
+                </span>
+              ))}
+            </div>
+          </article>
+          <article className="report-card">
+            <h3>Actividad GPS por hora</h3>
+            <div className="spark-bars">
+              {reportStats.hourly.map((item) => {
+                const max = Math.max(...reportStats.hourly.map((hour) => hour.count), 1);
+                return <span key={`hour-${item.hour}`} title={`${item.hour}:00 - ${item.count} puntos`} style={{ height: `${Math.max((item.count / max) * 100, 6)}%` }} />;
+              })}
+            </div>
+            <small className="muted">Cada barra representa una hora del día.</small>
+          </article>
+          <article className="report-card span-report">
+            <h3>Rutas con mayor avance</h3>
+            <div className="route-progress-list">
+              {reportStats.byRoute.map((route) => (
+                <span key={`route-report-${route.id}`}>
+                  <strong>{route.name}</strong>
+                  <small>{route.operator} · {dayLabel(route.day)} · {statusLabel(route.status)}</small>
+                  <i><b style={{ width: `${route.progress}%` }} /></i>
+                  <em>{route.progress}%</em>
+                </span>
+              ))}
+            </div>
+          </article>
+        </div>
+        <div className="panel-title subpanel-title"><History /><h2>Historial operativo</h2></div>
         <div className="table-wrap">
           <table>
             <thead><tr><th>Ruta</th><th>Barrio</th><th>Vehículo</th><th>Operador</th><th>Día</th><th>Estado</th><th>Avance</th><th>Asignada</th><th>Acciones</th></tr></thead>
