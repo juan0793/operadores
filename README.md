@@ -97,20 +97,14 @@ Archivos disponibles:
 mysql -u root -p -e "create database if not exists sistema_rutas_operadores character set utf8mb4 collate utf8mb4_unicode_ci;"
 ```
 
-2. Ejecutar el esquema:
-
-```bash
-mysql -u root -p sistema_rutas_operadores < backend/sql/schema.sql
-```
-
-3. Crear archivos de entorno:
+2. Crear archivos de entorno:
 
 ```bash
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-4. Ajustar `backend/.env`:
+3. Ajustar `backend/.env`:
 
 ```env
 PORT=4001
@@ -124,17 +118,19 @@ FRONTEND_URL=http://localhost:5174
 DEVIATION_WARNING_METERS=80
 ```
 
-5. Instalar dependencias:
+4. Instalar dependencias:
 
 ```bash
 npm run install:all
 ```
 
-6. Crear usuarios iniciales:
+5. Inicializar tablas y usuarios:
 
 ```bash
-npm run db:seed
+npm --prefix backend run db:init
 ```
+
+El inicializador ejecuta `backend/sql/schema.sql`, verifica/crea las tablas con `CREATE TABLE IF NOT EXISTS` y crea usuarios iniciales sin borrar datos.
 
 Usuarios de prueba:
 
@@ -145,7 +141,7 @@ operador@rutas.local / Rutas123
 publico@rutas.local / Rutas123
 ```
 
-7. Iniciar backend y frontend en dos terminales:
+6. Iniciar backend y frontend en dos terminales:
 
 ```bash
 npm run dev:backend
@@ -186,11 +182,10 @@ Modo demo:
 
 ## Despliegue en Railway
 
-### Backend
-
-Crear un servicio desde esta carpeta o desde el repositorio usando root directory `sistema-rutas-operadores`.
-
-Variables:
+1. Crear el proyecto de Railway desde el repositorio de GitHub.
+2. Agregar un servicio MySQL en el mismo proyecto.
+3. En el servicio backend, usar el root del repositorio `sistema-rutas-operadores`.
+4. Configurar estas variables en el backend:
 
 ```env
 NODE_ENV=production
@@ -201,16 +196,47 @@ DB_PASSWORD=${{MySQL.MYSQLPASSWORD}}
 DB_NAME=${{MySQL.MYSQLDATABASE}}
 JWT_SECRET=un_secreto_largo_y_privado
 JWT_EXPIRES_IN=8h
-FRONTEND_URL=https://tu-frontend.railway.app
+DEVIATION_WARNING_METERS=80
+FRONTEND_URL=https://tu-frontend.up.railway.app
 ```
 
-Comando de inicio:
+Railway ejecuta automaticamente:
 
 ```bash
-npm --prefix backend start
+npm --prefix backend run start:prod
 ```
 
-Ejecutar `backend/sql/schema.sql` en la base MySQL de Railway y luego el seed si se desean usuarios iniciales.
+Ese comando primero corre `db:init` y despues levanta `src/server.js`. No es necesario usar HeidiSQL, MySQL Workbench, DBeaver ni pegar SQL manualmente.
+
+El inicializador:
+
+- conecta a MySQL con variables de entorno,
+- ejecuta `backend/sql/schema.sql`,
+- soporta multiples sentencias SQL,
+- no ejecuta `DROP`, `TRUNCATE` ni `DELETE`,
+- no borra datos existentes,
+- crea/verifica usuarios iniciales con bcrypt.
+
+Usuarios iniciales:
+
+```text
+admin@rutas.local / Rutas123
+supervisor@rutas.local / Rutas123
+operador@rutas.local / Rutas123
+publico@rutas.local / Rutas123
+```
+
+Probar backend:
+
+```text
+https://operadores-production.up.railway.app/health
+```
+
+Respuesta esperada:
+
+```json
+{"ok":true,"service":"sistema-rutas-operadores"}
+```
 
 ### Frontend
 
@@ -219,7 +245,7 @@ Crear otro servicio con root directory `sistema-rutas-operadores/frontend`.
 Variables:
 
 ```env
-VITE_API_URL=https://tu-backend.railway.app
+VITE_API_URL=https://operadores-production.up.railway.app
 ```
 
 Comandos:

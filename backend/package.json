@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
+    "start:prod": "npm run db:init && node src/server.js",
+    "db:init": "node src/scripts/initDb.js",
     "db:seed": "node src/seed.js"
   },
   "dependencies": {
