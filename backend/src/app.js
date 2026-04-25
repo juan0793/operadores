@@ -30,8 +30,15 @@ export function createApp() {
 
   app.use((req, res) => res.status(404).json({ message: `Ruta no encontrada: ${req.path}` }));
   app.use((error, _req, res, _next) => {
-    const status = error.statusCode || (error.name === "ZodError" ? 400 : 500);
-    const message = error.name === "ZodError" ? "Datos invalidos" : error.message || "Error interno";
+    const isValidationError = error.name === "ZodError";
+    const status = error.statusCode || (isValidationError ? 400 : error.code === "ER_DUP_ENTRY" ? 409 : 500);
+    const firstIssue = isValidationError ? error.errors?.[0] : null;
+    const field = firstIssue?.path?.join(".");
+    const message = isValidationError
+      ? `Datos invalidos${field ? ` en ${field}` : ""}: ${firstIssue?.message || "revisa el formulario"}`
+      : error.code === "ER_DUP_ENTRY"
+        ? "Ya existe un registro con esos datos."
+        : error.message || "Error interno";
     res.status(status).json({ message, details: error.errors || undefined });
   });
 

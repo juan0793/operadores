@@ -9,7 +9,7 @@ const router = Router();
 const userSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
-  password: z.string().min(6).optional(),
+  password: z.string().min(4).optional(),
   role: z.enum(["administrador", "supervisor", "operador", "publico"]),
   phone: z.string().optional().nullable(),
   is_active: z.boolean().optional(),

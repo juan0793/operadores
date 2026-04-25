@@ -149,6 +149,8 @@ function AdminDashboard({ user }) {
   const [history, setHistory] = useState(null);
   const [form, setForm] = useState(emptyRoute);
   const [operatorForm, setOperatorForm] = useState({ name: "", email: "", phone: "", password: "Rutas123" });
+  const [actionMessage, setActionMessage] = useState(null);
+  const [busyAction, setBusyAction] = useState("");
   const [mapMode, setMapMode] = useState("route");
   const [markerDraft, setMarkerDraft] = useState({ label: "", marker_type: "referencia" });
   const [selectedRoute, setSelectedRoute] = useState("");
@@ -201,28 +203,46 @@ function AdminDashboard({ user }) {
 
   async function saveRoute(event) {
     event.preventDefault();
-    await apiFetch("/api/routes", { method: "POST", body: JSON.stringify(form) });
-    setForm(emptyRoute);
-    setNeighborhoodMode("select");
-    await load();
+    setBusyAction("saveRoute");
+    setActionMessage(null);
+    try {
+      await apiFetch("/api/routes", { method: "POST", body: JSON.stringify(form) });
+      setForm(emptyRoute);
+      setNeighborhoodMode("select");
+      setActionMessage({ type: "success", text: "Ruta guardada correctamente." });
+      await load();
+    } catch (error) {
+      setActionMessage({ type: "error", text: error.message });
+    } finally {
+      setBusyAction("");
+    }
   }
 
   async function assignRoute(event) {
     event.preventDefault();
-    await apiFetch("/api/assignments", {
-      method: "POST",
-      body: JSON.stringify({
-        route_id: Number(selectedRoute),
-        operator_id: Number(selectedOperator),
-        vehicle_name: selectedVehicleName,
-        service_day: selectedDay,
-      }),
-    });
-    setSelectedRoute("");
-    setSelectedOperator("");
-    setSelectedVehicleName("Aguas de Choluteca");
-    setSelectedDay("lunes");
-    await load();
+    setBusyAction("assignRoute");
+    setActionMessage(null);
+    try {
+      await apiFetch("/api/assignments", {
+        method: "POST",
+        body: JSON.stringify({
+          route_id: Number(selectedRoute),
+          operator_id: Number(selectedOperator),
+          vehicle_name: selectedVehicleName,
+          service_day: selectedDay,
+        }),
+      });
+      setSelectedRoute("");
+      setSelectedOperator("");
+      setSelectedVehicleName("Aguas de Choluteca");
+      setSelectedDay("lunes");
+      setActionMessage({ type: "success", text: "Ruta asignada correctamente." });
+      await load();
+    } catch (error) {
+      setActionMessage({ type: "error", text: error.message });
+    } finally {
+      setBusyAction("");
+    }
   }
 
   async function openRoute(route) {
@@ -243,12 +263,21 @@ function AdminDashboard({ user }) {
 
   async function createOperator(event) {
     event.preventDefault();
-    await apiFetch("/api/users", {
-      method: "POST",
-      body: JSON.stringify({ ...operatorForm, role: "operador", is_active: true }),
-    });
-    setOperatorForm({ name: "", email: "", phone: "", password: "Rutas123" });
-    await load();
+    setBusyAction("createOperator");
+    setActionMessage(null);
+    try {
+      await apiFetch("/api/users", {
+        method: "POST",
+        body: JSON.stringify({ ...operatorForm, role: "operador", is_active: true }),
+      });
+      setOperatorForm({ name: "", email: "", phone: "", password: "Rutas123" });
+      setActionMessage({ type: "success", text: "Operador creado correctamente." });
+      await load();
+    } catch (error) {
+      setActionMessage({ type: "error", text: error.message });
+    } finally {
+      setBusyAction("");
+    }
   }
 
   async function simulateRoute(assignment) {
@@ -278,6 +307,7 @@ function AdminDashboard({ user }) {
 
   return (
     <div className="grid-layout">
+      {actionMessage && <div className={`action-message ${actionMessage.type}`}>{actionMessage.text}</div>}
       <section id="rutas" className="panel wide">
         <div className="panel-title"><MapPin /><h2>Crear ruta</h2></div>
         <form className="route-form" onSubmit={saveRoute}>
@@ -338,7 +368,7 @@ function AdminDashboard({ user }) {
               onRemoveMarker={(index) => setForm({ ...form, markers: form.markers.filter((_, i) => i !== index) })}
             />
           </div>
-          <button className="primary" disabled={form.points.length < 2}><Plus size={18} />Guardar ruta</button>
+          <button className="primary" disabled={form.points.length < 2 || busyAction === "saveRoute"}><Plus size={18} />{busyAction === "saveRoute" ? "Guardando..." : "Guardar ruta"}</button>
         </form>
       </section>
 
@@ -358,7 +388,7 @@ function AdminDashboard({ user }) {
           <select value={selectedDay} onChange={(e) => setSelectedDay(e.target.value)} required>
             {weekDays.map((day) => <option key={day.value} value={day.value}>{day.label}</option>)}
           </select>
-          <button className="primary">Asignar</button>
+          <button className="primary" disabled={busyAction === "assignRoute"}>{busyAction === "assignRoute" ? "Asignando..." : "Asignar"}</button>
         </form>
       </section>
 
@@ -366,11 +396,11 @@ function AdminDashboard({ user }) {
         <section className="panel">
           <div className="panel-title"><UserPlus /><h2>Registrar operador</h2></div>
           <form className="stack" onSubmit={createOperator}>
-            <input value={operatorForm.name} onChange={(e) => setOperatorForm({ ...operatorForm, name: e.target.value })} placeholder="Nombre del operador" required />
-            <input value={operatorForm.email} onChange={(e) => setOperatorForm({ ...operatorForm, email: e.target.value })} placeholder="correo@ejemplo.com" required />
-            <input value={operatorForm.phone} onChange={(e) => setOperatorForm({ ...operatorForm, phone: e.target.value })} placeholder="Telefono" />
-            <input value={operatorForm.password} onChange={(e) => setOperatorForm({ ...operatorForm, password: e.target.value })} placeholder="Contrasena temporal" required />
-            <button className="primary">Crear operador</button>
+            <label>Nombre<input value={operatorForm.name} onChange={(e) => setOperatorForm({ ...operatorForm, name: e.target.value })} placeholder="Nombre del operador" required /></label>
+            <label>Correo<input type="email" value={operatorForm.email} onChange={(e) => setOperatorForm({ ...operatorForm, email: e.target.value })} placeholder="correo@ejemplo.com" required /></label>
+            <label>Telefono<input value={operatorForm.phone} onChange={(e) => setOperatorForm({ ...operatorForm, phone: e.target.value })} placeholder="Telefono" /></label>
+            <label>Contrasena temporal<input value={operatorForm.password} minLength={4} onChange={(e) => setOperatorForm({ ...operatorForm, password: e.target.value })} placeholder="Minimo 4 caracteres" required /></label>
+            <button className="primary" disabled={busyAction === "createOperator"}>{busyAction === "createOperator" ? "Creando..." : "Crear operador"}</button>
           </form>
         </section>
       )}
