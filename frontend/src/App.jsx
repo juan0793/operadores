@@ -868,6 +868,13 @@ function OperatorDashboard({ user }) {
         )}
         {activeRoute && (
           <div className="operator-map">
+            <div className="operator-map-head">
+              <div>
+                <strong>Mapa en vivo</strong>
+                <span>Usa + y - para acercar o alejar. La linea celeste muestra tu recorrido real.</span>
+              </div>
+              <span className={watching ? "live-pill active" : "live-pill"}>{watching ? "GPS transmitiendo" : "GPS detenido"}</span>
+            </div>
             <MonitorMap
               routes={[activeRoute]}
               locations={currentLocation ? [currentLocation] : []}

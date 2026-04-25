@@ -1,5 +1,5 @@
 import L from "leaflet";
-import { useEffect } from "react";
+import { Fragment, useEffect } from "react";
 import { MapContainer, Marker, Polygon, Polyline, Popup, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
 
 const markerIcon = new L.Icon({
@@ -19,13 +19,14 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function createVehicleIcon(vehicleName) {
+function createVehicleIcon(vehicleName, heading) {
   const label = escapeHtml(vehicleName || "Aguas de Choluteca");
+  const rotation = Number.isFinite(Number(heading)) ? Number(heading) : 0;
   return new L.DivIcon({
     className: "vehicle-marker",
-    html: `<span class="vehicle-label">${label}</span><span class="vehicle-body"><span class="vehicle-window"></span><span class="vehicle-stripe"></span></span>`,
-    iconSize: [128, 58],
-    iconAnchor: [64, 38],
+    html: `<span class="vehicle-label">${label}</span><span class="vehicle-shell" style="transform: rotate(${rotation}deg)"><span class="vehicle-direction"></span><span class="vehicle-body"><span class="vehicle-window"></span><span class="vehicle-stripe"></span><span class="vehicle-badge">AC</span></span></span>`,
+    iconSize: [146, 74],
+    iconAnchor: [73, 50],
   });
 }
 
@@ -34,6 +35,13 @@ const routeMarkerIcon = new L.DivIcon({
   html: '<span class="route-special-dot"></span>',
   iconSize: [26, 26],
   iconAnchor: [13, 13],
+});
+
+const landmarkIcon = new L.DivIcon({
+  className: "landmark-marker",
+  html: '<span class="landmark-pin"></span>',
+  iconSize: [28, 28],
+  iconAnchor: [14, 14],
 });
 
 const cholutecaCenter = [13.303, -87.1907];
@@ -91,6 +99,14 @@ const municipalGuides = [
     color: "#ef4444",
     points: [[13.287, -87.213], [13.274, -87.227], [13.263, -87.243], [13.252, -87.263]],
   },
+];
+
+const cityLandmarks = [
+  { name: "Parque Central de Choluteca", type: "Referencia central", position: [13.3029, -87.1907] },
+  { name: "Catedral de Choluteca", type: "Referencia historica", position: [13.3038, -87.1902] },
+  { name: "Puente Choluteca", type: "Referencia vial", position: [13.3007, -87.2022] },
+  { name: "Mercado Municipal", type: "Zona comercial", position: [13.3064, -87.1938] },
+  { name: "Hospital del Sur", type: "Referencia de emergencia", position: [13.2962, -87.1878] },
 ];
 
 function MapResizeFix() {
@@ -174,6 +190,7 @@ function PlanningLegend() {
       container.innerHTML = `
         <strong>Guias de ordenamiento</strong>
         <span><i style="background:#0f766e"></i>Barrios / colonias</span>
+        <span><i style="background:#0ea5e9"></i>Lugares de referencia</span>
         <span><i style="background:#f59e0b"></i>Choluteca - Yusguare</span>
         <span><i style="background:#ef4444"></i>Salida a Marcovia</span>
       `;
@@ -185,18 +202,43 @@ function PlanningLegend() {
   return null;
 }
 
+function LandmarkMarkers({ compact = false }) {
+  const landmarks = compact ? cityLandmarks.slice(0, 3) : cityLandmarks;
+  return (
+    <>
+      {landmarks.map((landmark) => (
+        <Marker key={landmark.name} position={landmark.position} icon={landmarkIcon}>
+          <Tooltip direction="top" offset={[0, -12]} permanent={!compact}>
+            {landmark.name}
+          </Tooltip>
+          <Popup>
+            <strong>{landmark.name}</strong>
+            <span>{landmark.type}</span>
+          </Popup>
+        </Marker>
+      ))}
+    </>
+  );
+}
+
 export function RouteEditorMap({ points, markers = [], color = "#2563eb", selectedNeighborhood = "", onAddPoint, onRemovePoint, onAddMarker, onRemoveMarker, mode = "route" }) {
   const editorFitKey = `${points.length}-${markers.length}-${points.at(-1)?.latitude || ""}-${points.at(-1)?.longitude || ""}`;
   return (
-    <MapContainer className="map" center={points[0] ? [points[0].latitude, points[0].longitude] : cholutecaCenter} zoom={15} maxBounds={cholutecaBounds}>
+    <MapContainer className="map" center={points[0] ? [points[0].latitude, points[0].longitude] : cholutecaCenter} zoom={15} minZoom={12} maxZoom={20} maxBounds={cholutecaBounds} scrollWheelZoom touchZoom doubleClickZoom>
       <TileLayer attribution={cityTiles.attribution} url={cityTiles.imageryUrl} maxZoom={20} />
       <TileLayer url={cityTiles.labelsUrl} maxZoom={20} pane="overlayPane" />
       <MapResizeFix />
       <ClickCollector onAddPoint={(point) => (mode === "marker" ? onAddMarker?.(point) : onAddPoint?.(point))} />
       <FitBounds points={points.length ? points : markers} fitKey={editorFitKey} />
       <PlanningOverlays selectedNeighborhood={selectedNeighborhood} />
+      <LandmarkMarkers />
       <PlanningLegend />
-      {points.length > 1 && <Polyline positions={points.map((p) => [p.latitude, p.longitude])} pathOptions={{ color, weight: 5 }} />}
+      {points.length > 1 && (
+        <>
+          <Polyline positions={points.map((p) => [p.latitude, p.longitude])} pathOptions={{ color: "#ffffff", weight: 10, opacity: 0.86 }} />
+          <Polyline positions={points.map((p) => [p.latitude, p.longitude])} pathOptions={{ color, weight: 5, opacity: 0.95 }} />
+        </>
+      )}
       {points.map((point, index) => (
         <Marker key={`${point.latitude}-${point.longitude}-${index}`} position={[point.latitude, point.longitude]} icon={markerIcon}>
           <Popup>
@@ -227,18 +269,26 @@ export function MonitorMap({ routes = [], locations = [], tracks = [], compact =
     tracks.map((track) => `${track.assignment_id}:${track.points?.length || 0}`).join("-"),
   ].join("|");
   return (
-    <MapContainer className={`map ${compact ? "map-compact" : "map-large"}`} center={cholutecaCenter} zoom={14} maxBounds={cholutecaBounds}>
+    <MapContainer className={`map ${compact ? "map-compact" : "map-large"}`} center={cholutecaCenter} zoom={14} minZoom={12} maxZoom={20} maxBounds={cholutecaBounds} scrollWheelZoom touchZoom doubleClickZoom>
       <TileLayer attribution={cityTiles.attribution} url={cityTiles.imageryUrl} maxZoom={20} />
       <TileLayer url={cityTiles.labelsUrl} maxZoom={20} pane="overlayPane" />
       <MapResizeFix />
       <FitBounds points={routePoints.length ? routePoints : (trackPoints.length ? trackPoints : locations)} fitKey={defaultFitKey} />
+      <LandmarkMarkers compact={compact} />
       {routes.map((route) =>
         route.points?.length > 1 ? (
-          <Polyline
-            key={`route-${route.assignment_id || route.id}-${route.service_day || "all"}`}
-            positions={route.points.map((p) => [p.latitude, p.longitude])}
-            pathOptions={{ color: route.color || "#2563eb", weight: 5 }}
-          />
+          <Fragment key={`route-layer-${route.assignment_id || route.id}-${route.service_day || "all"}`}>
+            <Polyline
+              key={`route-shadow-${route.assignment_id || route.id}-${route.service_day || "all"}`}
+              positions={route.points.map((p) => [p.latitude, p.longitude])}
+              pathOptions={{ color: "#ffffff", weight: compact ? 9 : 11, opacity: 0.82 }}
+            />
+            <Polyline
+              key={`route-${route.assignment_id || route.id}-${route.service_day || "all"}`}
+              positions={route.points.map((p) => [p.latitude, p.longitude])}
+              pathOptions={{ color: route.color || "#2563eb", weight: compact ? 5 : 6, opacity: 0.98 }}
+            />
+          </Fragment>
         ) : null
       )}
       {routes.flatMap((route) => route.markers || []).map((marker, index) => (
@@ -251,15 +301,22 @@ export function MonitorMap({ routes = [], locations = [], tracks = [], compact =
       ))}
       {tracks.map((track) =>
         track.points?.length > 1 ? (
-          <Polyline
-            key={`track-${track.assignment_id}`}
-            positions={track.points.map((p) => [p.latitude, p.longitude])}
-            pathOptions={{ color: track.color || "#f97316", weight: 4, dashArray: "8 8" }}
-          />
+          <Fragment key={`track-layer-${track.assignment_id}`}>
+            <Polyline
+              key={`track-glow-${track.assignment_id}`}
+              positions={track.points.map((p) => [p.latitude, p.longitude])}
+              pathOptions={{ color: "#22d3ee", weight: compact ? 11 : 13, opacity: 0.3 }}
+            />
+            <Polyline
+              key={`track-${track.assignment_id}`}
+              positions={track.points.map((p) => [p.latitude, p.longitude])}
+              pathOptions={{ color: "#06b6d4", weight: compact ? 5 : 6, opacity: 0.95 }}
+            />
+          </Fragment>
         ) : null
       )}
       {locations.map((loc) => (
-        <Marker key={`${loc.assignment_id}-${loc.recorded_at || loc.last_location_at}`} position={[Number(loc.latitude), Number(loc.longitude)]} icon={createVehicleIcon(loc.vehicle_name)}>
+        <Marker key={`${loc.assignment_id}-${loc.recorded_at || loc.last_location_at}`} position={[Number(loc.latitude), Number(loc.longitude)]} icon={createVehicleIcon(loc.vehicle_name, loc.heading)}>
           <Popup>
             <strong>{loc.vehicle_name || "Aguas de Choluteca"}</strong>
             <span>{loc.operator_name || "Operador"}</span>
