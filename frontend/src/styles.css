@@ -641,6 +641,60 @@ td {
   gap: 12px;
 }
 
+.operator-management-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.operator-management-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid #d8e0ea;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.operator-management-card h3,
+.operator-management-card p {
+  margin: 6px 0 0;
+}
+
+.operator-management-card small {
+  display: block;
+  margin-top: 6px;
+  color: #64748b;
+}
+
+.operator-actions {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+}
+
+.status-pill {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.status-pill.active {
+  color: #115e59;
+  background: #ccfbf1;
+}
+
+.status-pill.inactive {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
 .vehicle-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -1009,6 +1063,14 @@ td {
 
   .marker-tools {
     grid-template-columns: 1fr;
+  }
+
+  .operator-management-card {
+    grid-template-columns: 1fr;
+  }
+
+  .operator-actions {
+    justify-items: stretch;
   }
 
   .span-2 {

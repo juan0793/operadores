@@ -1,4 +1,4 @@
-import { Activity, AlertTriangle, ClipboardList, History, LogOut, MapPin, Navigation, Play, Plus, Radio, Route, Trash2, UserPlus, Users } from "lucide-react";
+import { Activity, AlertTriangle, ClipboardList, History, KeyRound, LogOut, MapPin, Navigation, Play, Plus, Radio, Route, Trash2, UserCheck, UserPlus, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { io } from "socket.io-client";
 import { apiFetch, getApiUrl } from "./api.js";
@@ -280,6 +280,63 @@ function AdminDashboard({ user }) {
     }
   }
 
+  async function toggleOperator(operator) {
+    setBusyAction(`operator-${operator.id}`);
+    setActionMessage(null);
+    try {
+      await apiFetch(`/api/users/${operator.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          name: operator.name,
+          email: operator.email,
+          phone: operator.phone,
+          role: "operador",
+          is_active: !Boolean(operator.is_active),
+        }),
+      });
+      setActionMessage({
+        type: "success",
+        text: Boolean(operator.is_active) ? "Operador desactivado correctamente." : "Operador activado correctamente.",
+      });
+      await load();
+    } catch (error) {
+      setActionMessage({ type: "error", text: error.message });
+    } finally {
+      setBusyAction("");
+    }
+  }
+
+  async function resetOperatorPassword(operator) {
+    const password = window.prompt(`Nueva contrasena temporal para ${operator.name}`, "Rutas123");
+    if (!password) return;
+    if (password.length < 4) {
+      setActionMessage({ type: "error", text: "La contrasena temporal debe tener al menos 4 caracteres." });
+      return;
+    }
+
+    setBusyAction(`operator-password-${operator.id}`);
+    setActionMessage(null);
+    try {
+      await apiFetch(`/api/users/${operator.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          name: operator.name,
+          email: operator.email,
+          phone: operator.phone,
+          role: "operador",
+          is_active: Boolean(operator.is_active),
+          password,
+        }),
+      });
+      setActionMessage({ type: "success", text: `Contrasena temporal actualizada para ${operator.name}.` });
+      await load();
+    } catch (error) {
+      setActionMessage({ type: "error", text: error.message });
+    } finally {
+      setBusyAction("");
+    }
+  }
+
   async function simulateRoute(assignment) {
     const route = await apiFetch(`/api/routes/${assignment.route_id}`);
     const points = route.points || [];
@@ -402,6 +459,48 @@ function AdminDashboard({ user }) {
             <label>Contrasena temporal<input value={operatorForm.password} minLength={4} onChange={(e) => setOperatorForm({ ...operatorForm, password: e.target.value })} placeholder="Minimo 4 caracteres" required /></label>
             <button className="primary" disabled={busyAction === "createOperator"}>{busyAction === "createOperator" ? "Creando..." : "Crear operador"}</button>
           </form>
+        </section>
+      )}
+
+      {user.role === "administrador" && (
+        <section className="panel wide">
+          <div className="panel-title"><UserCheck /><h2>Operadores registrados</h2></div>
+          {operators.length === 0 ? (
+            <p className="muted">Todavia no hay operadores registrados.</p>
+          ) : (
+            <div className="operator-management-grid">
+              {operators.map((operator) => (
+                <article className="operator-management-card" key={operator.id}>
+                  <div>
+                    <span className={`status-pill ${operator.is_active ? "active" : "inactive"}`}>
+                      {operator.is_active ? "Activo" : "Inactivo"}
+                    </span>
+                    <h3>{operator.name}</h3>
+                    <p>{operator.email}</p>
+                    <small>{operator.phone || "Sin telefono"} - Alta {new Date(operator.created_at).toLocaleDateString()}</small>
+                  </div>
+                  <div className="operator-actions">
+                    <button
+                      className="ghost"
+                      type="button"
+                      disabled={busyAction === `operator-${operator.id}`}
+                      onClick={() => toggleOperator(operator)}
+                    >
+                      {operator.is_active ? "Desactivar" : "Activar"}
+                    </button>
+                    <button
+                      className="link-button"
+                      type="button"
+                      disabled={busyAction === `operator-password-${operator.id}`}
+                      onClick={() => resetOperatorPassword(operator)}
+                    >
+                      <KeyRound size={16} />Restablecer clave
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
