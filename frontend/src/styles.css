@@ -338,6 +338,35 @@ textarea {
   overflow: hidden;
 }
 
+.map-guide-legend {
+  display: grid;
+  gap: 5px;
+  min-width: 190px;
+  padding: 10px 12px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 8px;
+  color: #172033;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+  font-size: 0.78rem;
+}
+
+.map-guide-legend strong {
+  font-size: 0.82rem;
+}
+
+.map-guide-legend span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.map-guide-legend i {
+  width: 18px;
+  height: 4px;
+  border-radius: 999px;
+}
+
 .map-dashboard {
   display: grid;
   grid-template-columns: repeat(4, minmax(120px, 1fr));

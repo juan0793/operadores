@@ -50,7 +50,9 @@ Archivos disponibles:
 - Login con roles.
 - Administrador/supervisor:
   - crear rutas trazando puntos sobre el mapa,
+  - seleccionar barrios o colonias desde un catalogo y agregar barrios manualmente si no existen,
   - guardar rutas por barrio o colonia,
+  - ver guias de ordenamiento en el mapa para barrios, limite Choluteca-Yusguare y salida hacia Marcovia,
   - agregar marcadores de referencia sobre la ruta,
   - listar rutas,
   - asignar rutas a operadores,
@@ -164,7 +166,7 @@ Health: http://localhost:4001/health
 Modo real:
 
 1. Entrar como administrador y crear una ruta con varios puntos.
-2. Escribir el barrio o colonia.
+2. Seleccionar el barrio o colonia. Si no existe, usar `Agregar manualmente`.
 3. Usar `Agregar marcador` para guardar referencias como inicio, parada, punto critico o fin.
 4. Asignar la ruta al operador.
 5. Escribir el nombre del vehiculo, por ejemplo `Unidad Azul 07`.
@@ -238,4 +240,5 @@ dist
 - Cambiar `JWT_SECRET` antes de produccion.
 - Cambiar las contrasenas creadas por el seed.
 - La pantalla publica usa `/api/public/routes` y no entrega correos, telefonos ni identificadores internos de usuarios.
+- Las guias de barrios y limites del mapa son una capa operativa editable. Para limites oficiales se debe reemplazar o complementar con un GeoJSON municipal/catastral validado.
 - La app queda lista para integrarse mas adelante con el sistema de clandestinos mediante enlaces o API, sin dependencia directa.

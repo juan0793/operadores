@@ -25,6 +25,19 @@ const weekDays = [
   { value: "domingo", label: "Domingo" },
 ];
 
+const baseNeighborhoods = [
+  "Barrio El Centro",
+  "Barrio El Cortijo",
+  "Barrio Las Acacias",
+  "Barrio Los Fuentes",
+  "Barrio Guadalupe",
+  "Barrio El Aterrizaje",
+  "Barrio La Libertad",
+  "Barrio San Francisco",
+  "Colonia San Jose",
+  "Colonia 21 de Octubre",
+];
+
 function dayLabel(day) {
   return weekDays.find((item) => item.value === day)?.label || day || "Sin dia";
 }
@@ -142,6 +155,7 @@ function AdminDashboard({ user }) {
   const [selectedOperator, setSelectedOperator] = useState("");
   const [selectedVehicleName, setSelectedVehicleName] = useState("Aguas de Choluteca");
   const [selectedDay, setSelectedDay] = useState("lunes");
+  const [neighborhoodMode, setNeighborhoodMode] = useState("select");
 
   async function load() {
     const [routeList, userList, assignmentList, locationList, trackList, report, eventList] = await Promise.all([
@@ -173,6 +187,11 @@ function AdminDashboard({ user }) {
   }, []);
 
   const detailedRoutes = useMemo(() => routes.map((route) => ({ ...route, points: route.points || [] })), [routes]);
+  const neighborhoodOptions = useMemo(() => {
+    const registered = routes.map((route) => route.neighborhood).filter(Boolean);
+    return [...new Set([...baseNeighborhoods, ...registered])].sort((a, b) => a.localeCompare(b));
+  }, [routes]);
+  const selectedNeighborhoodOption = neighborhoodMode === "manual" ? "__manual__" : form.neighborhood || "";
   const assignmentsByDay = useMemo(() => {
     return weekDays.map((day) => ({
       ...day,
@@ -184,6 +203,7 @@ function AdminDashboard({ user }) {
     event.preventDefault();
     await apiFetch("/api/routes", { method: "POST", body: JSON.stringify(form) });
     setForm(emptyRoute);
+    setNeighborhoodMode("select");
     await load();
   }
 
@@ -262,8 +282,29 @@ function AdminDashboard({ user }) {
         <div className="panel-title"><MapPin /><h2>Crear ruta</h2></div>
         <form className="route-form" onSubmit={saveRoute}>
           <label>Nombre<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></label>
-          <label>Barrio o colonia<input value={form.neighborhood} onChange={(e) => setForm({ ...form, neighborhood: e.target.value })} placeholder="Ej. Barrio El Centro" /></label>
+          <label>
+            Barrio o colonia
+            <select
+              value={selectedNeighborhoodOption}
+              onChange={(e) => {
+                if (e.target.value === "__manual__") {
+                  setNeighborhoodMode("manual");
+                  setForm({ ...form, neighborhood: "" });
+                  return;
+                }
+                setNeighborhoodMode("select");
+                setForm({ ...form, neighborhood: e.target.value });
+              }}
+            >
+              <option value="">Seleccionar barrio</option>
+              {neighborhoodOptions.map((neighborhood) => <option key={neighborhood} value={neighborhood}>{neighborhood}</option>)}
+              <option value="__manual__">Agregar manualmente</option>
+            </select>
+          </label>
           <label>Color<input type="color" value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} /></label>
+          {selectedNeighborhoodOption === "__manual__" && (
+            <label className="span-2">Nuevo barrio o colonia<input value={form.neighborhood} onChange={(e) => setForm({ ...form, neighborhood: e.target.value })} placeholder="Ej. Colonia nueva" /></label>
+          )}
           <label className="span-2">Descripcion<textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
           <label className="check"><input type="checkbox" checked={form.is_public} onChange={(e) => setForm({ ...form, is_public: e.target.checked })} />Visible al publico</label>
           <div className="marker-tools span-2">
@@ -286,6 +327,7 @@ function AdminDashboard({ user }) {
               markers={form.markers}
               color={form.color}
               mode={mapMode}
+              selectedNeighborhood={form.neighborhood}
               onAddPoint={(point) => setForm({ ...form, points: [...form.points, point] })}
               onRemovePoint={(index) => setForm({ ...form, points: form.points.filter((_, i) => i !== index) })}
               onAddMarker={(point) => {
