@@ -18,4 +18,5 @@ export const config = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "8h",
   frontendUrl: process.env.FRONTEND_URL || "http://localhost:5174",
   deviationWarningMeters: Number(process.env.DEVIATION_WARNING_METERS || 80),
+  gpsIngestApiKey: process.env.GPS_INGEST_API_KEY || "",
 };

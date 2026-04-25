@@ -116,6 +116,7 @@ DB_NAME=sistema_rutas_operadores
 JWT_SECRET=cambiar_este_secreto_en_produccion
 FRONTEND_URL=http://localhost:5174
 DEVIATION_WARNING_METERS=80
+GPS_INGEST_API_KEY=cambiar_clave_para_gps_integrado
 ```
 
 4. Instalar dependencias:
@@ -214,6 +215,7 @@ DB_NAME=${{MySQL.MYSQLDATABASE}}
 JWT_SECRET=un_secreto_largo_y_privado
 JWT_EXPIRES_IN=8h
 DEVIATION_WARNING_METERS=80
+GPS_INGEST_API_KEY=clave_privada_para_gps_integrado
 FRONTEND_URL=https://tu-frontend.up.railway.app
 ```
 
@@ -276,6 +278,29 @@ Directorio publicado:
 ```text
 dist
 ```
+
+### GPS vehicular integrado
+
+Si los vehiculos ya traen GPS propio, el proveedor debe poder enviar posiciones al backend por HTTP o exponer una API que el sistema pueda consultar. La forma preparada en este proyecto es recibir datos por:
+
+```text
+POST /api/locations/vehicle-gps
+Header: x-api-key: valor_de_GPS_INGEST_API_KEY
+```
+
+Ejemplo de payload:
+
+```json
+{
+  "vehicle_name": "Unidad Azul 07",
+  "latitude": 13.303,
+  "longitude": -87.1907,
+  "speed": 25,
+  "heading": 180
+}
+```
+
+El `vehicle_name` debe coincidir con el nombre del vehiculo asignado a una ruta activa. Cuando llega la posicion, el sistema la guarda como GPS del operador/vehiculo, actualiza avance, valida desvio y la refleja en monitoreo y pantalla publica.
 
 ## Notas de seguridad
 

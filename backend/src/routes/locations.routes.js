@@ -16,6 +16,16 @@ export const locationSchema = z.object({
   progress_percent: z.number().min(0).max(100).optional(),
 });
 
+const vehicleLocationSchema = z.object({
+  vehicle_name: z.string().min(2),
+  latitude: z.number(),
+  longitude: z.number(),
+  accuracy: z.number().optional().nullable(),
+  speed: z.number().optional().nullable(),
+  heading: z.number().optional().nullable(),
+  battery_level: z.number().optional().nullable(),
+});
+
 export async function saveLocation(user, data) {
   const assignment = await query("select * from route_assignments where id = $1", [data.assignment_id]);
   if (!assignment.rows[0]) throw Object.assign(new Error("Asignacion no encontrada"), { statusCode: 404 });
@@ -104,6 +114,45 @@ export async function saveLocation(user, data) {
 }
 
 const router = Router();
+
+router.post("/vehicle-gps", async (req, res, next) => {
+  try {
+    if (!config.gpsIngestApiKey) {
+      return res.status(503).json({ message: "Ingesta GPS vehicular no configurada" });
+    }
+    const providedKey = req.headers["x-api-key"];
+    if (providedKey !== config.gpsIngestApiKey) {
+      return res.status(401).json({ message: "API key invalida" });
+    }
+
+    const data = vehicleLocationSchema.parse(req.body);
+    const assignment = await query(
+      `select a.*, u.id as operator_id
+       from route_assignments a
+       join users u on u.id = a.operator_id
+       where lower(a.vehicle_name) = lower($1)
+         and a.status in ('assigned', 'in_progress')
+       order by a.assigned_at desc
+       limit 1`,
+      [data.vehicle_name]
+    );
+    if (!assignment.rows[0]) {
+      return res.status(404).json({ message: "No hay asignacion activa para ese vehiculo" });
+    }
+
+    const location = await saveLocation(
+      { id: assignment.rows[0].operator_id, role: "gps_integrado", name: data.vehicle_name },
+      { assignment_id: assignment.rows[0].id, ...data }
+    );
+    req.app.get("io")?.to("monitor").emit("location:updated", location);
+    if (location.warning) req.app.get("io")?.to("monitor").emit("route:warning", location.warning);
+    req.app.get("io")?.to("public").emit("public:updated");
+    res.status(201).json(location);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.use(authenticate);
 
 router.post("/", async (req, res, next) => {

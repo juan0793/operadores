@@ -604,10 +604,13 @@ function AdminDashboard({ user }) {
           <div className="warning-list">
             {warnings.slice(0, 8).map((warning, index) => (
               <article className="warning-card" key={`${warning.id || warning.assignment_id}-${warning.created_at || index}`}>
-                <strong>{warning.route_name || `Ruta #${warning.route_id}`}</strong>
-                <span>{warning.operator_name || `Operador #${warning.operator_id}`}</span>
-                <p>{warning.notes || warning.message || "Operador fuera de la ruta marcada."}</p>
-                <small>{warning.created_at ? new Date(warning.created_at).toLocaleString() : "Ahora"}</small>
+                <div className="warning-icon"><AlertTriangle size={20} /></div>
+                <div>
+                  <span className="warning-kicker">Desvio detectado</span>
+                  <strong>{warning.route_name || `Ruta #${warning.route_id}`}</strong>
+                  <p>{warning.notes || warning.message || "Operador fuera de la ruta marcada."}</p>
+                  <small>{warning.operator_name || `Operador #${warning.operator_id}`} - {warning.created_at ? new Date(warning.created_at).toLocaleString() : "Ahora"}</small>
+                </div>
               </article>
             ))}
           </div>
@@ -679,7 +682,7 @@ function OperatorDashboard({ user }) {
   const [operatorTrack, setOperatorTrack] = useState(null);
   const [watching, setWatching] = useState(false);
   const [completing, setCompleting] = useState(false);
-  const [message, setMessage] = useState("");
+  const [operatorNotice, setOperatorNotice] = useState(null);
   const [offlineCount, setOfflineCount] = useState(() => JSON.parse(localStorage.getItem("rutas_pending_locations") || "[]").length);
   const watchIdRef = useRef(null);
   const socketRef = useRef(null);
@@ -729,7 +732,7 @@ function OperatorDashboard({ user }) {
       }
     }
     writeQueue(pending);
-    if (items.length !== pending.length) setMessage("Ubicaciones pendientes sincronizadas.");
+    if (items.length !== pending.length) setOperatorNotice({ type: "success", title: "Sincronizado", text: "Ubicaciones pendientes sincronizadas." });
   }
 
   useEffect(() => {
@@ -742,11 +745,11 @@ function OperatorDashboard({ user }) {
     if (!active) return;
     if (watching) return;
     if (!navigator.geolocation) {
-      setMessage("Este dispositivo no soporta GPS en el navegador.");
+      setOperatorNotice({ type: "error", title: "GPS no disponible", text: "Este dispositivo no soporta GPS en el navegador." });
       return;
     }
     setWatching(true);
-    setMessage("GPS activo. Transmitiendo ubicacion...");
+    setOperatorNotice({ type: "info", title: "GPS activo", text: "Transmitiendo ubicacion en tiempo real." });
     socketRef.current = io(getApiUrl(), { auth: { token: localStorage.getItem("rutas_token") } });
     watchIdRef.current = navigator.geolocation.watchPosition(
       (position) => {
@@ -782,28 +785,28 @@ function OperatorDashboard({ user }) {
 
         if (!navigator.onLine) {
           writeQueue([...readQueue(), payload]);
-          setMessage("Sin internet: ubicacion guardada para sincronizar luego.");
+          setOperatorNotice({ type: "warning", title: "Sin internet", text: "Ubicacion guardada para sincronizar luego." });
           return;
         }
 
         socketRef.current?.emit("operator:location", payload, (response) => {
           if (!response?.ok) {
-            setMessage(response?.message || "No se pudo transmitir la ubicacion.");
+            setOperatorNotice({ type: "error", title: "No se transmitio", text: response?.message || "No se pudo transmitir la ubicacion." });
             return;
           }
           if (response?.location?.progress_percent !== undefined) {
             setActive((item) => ({ ...item, progress_percent: response.location.progress_percent, status: "in_progress" }));
           }
           if (response?.location?.warning) {
-            setMessage(`Advertencia: estas a ${response.location.warning.distance_meters} m de la ruta establecida.`);
+            setOperatorNotice({ type: "warning", title: "Fuera de ruta", text: `Estas a ${response.location.warning.distance_meters} m de la ruta establecida.` });
           } else {
-            setMessage("Ubicacion transmitida correctamente.");
+            setOperatorNotice({ type: "success", title: "Ubicacion enviada", text: "Movimiento actualizado en el mapa." });
           }
         });
       },
       () => {
         setWatching(false);
-        setMessage("No se pudo obtener la ubicacion. Revisa permisos del navegador.");
+        setOperatorNotice({ type: "error", title: "GPS no disponible", text: "No se pudo obtener la ubicacion. Revisa permisos del navegador." });
       },
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
     );
@@ -812,7 +815,7 @@ function OperatorDashboard({ user }) {
   async function complete() {
     if (!active) return;
     setCompleting(true);
-    setMessage("");
+    setOperatorNotice(null);
     try {
       await apiFetch(`/api/assignments/${active.id}/status`, {
         method: "PATCH",
@@ -826,10 +829,10 @@ function OperatorDashboard({ user }) {
       socketRef.current = null;
       setWatching(false);
       setActive((item) => ({ ...item, status: "completed", progress_percent: 100 }));
-      setMessage("Ruta marcada como completada.");
+      setOperatorNotice({ type: "success", title: "Ruta finalizada", text: "La ruta se marco como completada correctamente." });
       await load();
     } catch (error) {
-      setMessage(error.message || "No se pudo finalizar la ruta.");
+      setOperatorNotice({ type: "error", title: "No se pudo finalizar", text: error.message || "No se pudo finalizar la ruta." });
     } finally {
       setCompleting(false);
     }
@@ -869,8 +872,13 @@ function OperatorDashboard({ user }) {
             />
           </div>
         )}
-        {offlineCount > 0 && <p className="notice">{offlineCount} ubicaciones pendientes por sincronizar.</p>}
-        {message && <p className="notice">{message}</p>}
+        {offlineCount > 0 && <div className="operator-notice warning"><strong>Pendiente</strong><span>{offlineCount} ubicaciones por sincronizar.</span></div>}
+        {operatorNotice && (
+          <div className={`operator-notice ${operatorNotice.type}`}>
+            <strong>{operatorNotice.title}</strong>
+            <span>{operatorNotice.text}</span>
+          </div>
+        )}
       </section>
     </main>
   );
