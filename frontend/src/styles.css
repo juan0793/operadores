@@ -26,7 +26,7 @@ textarea {
 
 button {
   cursor: pointer;
-  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease, opacity 160ms ease;
+  transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, color 180ms ease, transform 180ms ease, opacity 180ms ease;
 }
 
 button:hover:not(:disabled) {
@@ -275,6 +275,7 @@ textarea {
   border-radius: 6px;
   color: #dbeafe;
   text-decoration: none;
+  transition: background 180ms ease, box-shadow 180ms ease, color 180ms ease, transform 180ms ease;
 }
 
 .dynamic-menu a span {
@@ -293,6 +294,7 @@ textarea {
 .sidebar a.active {
   color: #ffffff;
   background: rgba(20, 184, 166, 0.16);
+  transform: translateX(2px);
 }
 
 .sidebar a.active {
@@ -332,6 +334,12 @@ textarea {
   border-radius: 8px;
   background: white;
   box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+  transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+
+.panel:hover {
+  border-color: #c7d6e5;
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.11);
 }
 
 .action-message {
@@ -393,10 +401,73 @@ textarea {
 .panel-title svg {
   flex: 0 0 auto;
   color: #0f766e;
+  filter: drop-shadow(0 0 0 rgba(20, 184, 166, 0));
+  transition: color 220ms ease, filter 220ms ease, transform 220ms ease;
+}
+
+.panel:hover .panel-title svg,
+.panel-title:hover svg {
+  color: #14b8a6;
+  filter: drop-shadow(0 0 9px rgba(20, 184, 166, 0.55));
+  transform: scale(1.06);
 }
 
 .panel-title h2 {
   line-height: 1.15;
+  transition: color 220ms ease;
+}
+
+.panel:hover .panel-title h2 {
+  color: #07142b;
+}
+
+.live-title svg {
+  color: #0f766e;
+  filter: drop-shadow(0 0 8px rgba(20, 184, 166, 0.52));
+  animation: liveIconGlow 1.8s ease-in-out infinite;
+}
+
+.live-title h2 {
+  position: relative;
+}
+
+.live-title h2::after {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-left: 10px;
+  border-radius: 999px;
+  background: #14b8a6;
+  box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.5);
+  animation: liveDotPulse 1.8s ease-out infinite;
+  vertical-align: middle;
+}
+
+@keyframes liveIconGlow {
+  0%,
+  100% {
+    color: #0f766e;
+    filter: drop-shadow(0 0 5px rgba(20, 184, 166, 0.35));
+    transform: scale(1);
+  }
+  50% {
+    color: #14b8a6;
+    filter: drop-shadow(0 0 14px rgba(20, 184, 166, 0.82));
+    transform: scale(1.08);
+  }
+}
+
+@keyframes liveDotPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.5);
+  }
+  75% {
+    box-shadow: 0 0 0 10px rgba(20, 184, 166, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(20, 184, 166, 0);
+  }
 }
 
 .route-form {
@@ -508,6 +579,13 @@ textarea {
   color: #0f172a;
   background: #e0f2fe;
   text-align: center;
+  transition: background 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.map-dashboard span:hover {
+  background: #ccfbf1;
+  box-shadow: 0 12px 24px rgba(15, 118, 110, 0.12);
+  transform: translateY(-2px);
 }
 
 .map-dashboard strong {
@@ -753,6 +831,13 @@ textarea {
   padding: 14px;
   border-radius: 6px;
   background: #f1f5f9;
+  transition: background 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.stats span:hover {
+  background: #eef6f4;
+  box-shadow: 0 12px 24px rgba(15, 118, 110, 0.1);
+  transform: translateY(-2px);
 }
 
 .stats strong {
@@ -1010,6 +1095,13 @@ td {
   border: 1px solid #d8e0ea;
   border-radius: 8px;
   background: #f8fafc;
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.vehicle-card:hover {
+  border-color: #99f6e4;
+  box-shadow: 0 14px 28px rgba(15, 118, 110, 0.12);
+  transform: translateY(-2px);
 }
 
 .vehicle-card strong {
@@ -1726,6 +1818,14 @@ td {
   place-items: center;
   padding: 14px;
   text-align: center;
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.report-hero article:hover,
+.report-card:hover {
+  border-color: #99f6e4;
+  box-shadow: 0 14px 28px rgba(15, 118, 110, 0.1);
+  transform: translateY(-2px);
 }
 
 .report-hero span,
@@ -1758,6 +1858,7 @@ td {
   align-content: start;
   min-height: 220px;
   padding: 14px;
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
 }
 
 .report-card h3 {

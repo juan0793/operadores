@@ -809,7 +809,7 @@ function AdminDashboard({ user }) {
       </section>
 
       <section id="monitoreo" className="panel wide">
-        <div className="panel-title"><Radio /><h2>Monitoreo en tiempo real</h2></div>
+        <div className="panel-title live-title"><Radio /><h2>Monitoreo en tiempo real</h2></div>
         <div className="map-dashboard">
           <span><strong>{locations.length}</strong> vehículos activos</span>
           <span><strong>{routes.length}</strong> rutas</span>
