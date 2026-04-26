@@ -627,9 +627,11 @@ function AdminDashboard({ user }) {
                 <p className="muted">Sin operadores</p>
               ) : day.assignments.map((assignment) => (
                 <span className="day-assignment" key={assignment.id}>
+                  <i className={`week-live-dot ${assignment.status === "completed" ? "done" : ""}`} aria-hidden="true" />
                   <strong>{assignment.operator_name}</strong>
                   <small>{assignment.vehicle_name || "Aguas de Choluteca"}</small>
                   <small>{assignment.route_name}</small>
+                  <em>{statusLabel(assignment.status)}</em>
                 </span>
               ))}
             </article>

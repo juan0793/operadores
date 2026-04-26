@@ -37,6 +37,15 @@ const routeMarkerIcon = new L.DivIcon({
   iconAnchor: [13, 13],
 });
 
+function createRouteEndpointIcon(label, tone = "start") {
+  return new L.DivIcon({
+    className: `route-endpoint-marker ${tone}`,
+    html: `<span>${label}</span>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
+  });
+}
+
 const landmarkIcon = new L.DivIcon({
   className: "landmark-marker",
   html: '<span class="landmark-pin"></span>',
@@ -221,6 +230,22 @@ function LandmarkMarkers({ compact = false }) {
   );
 }
 
+function RouteEndpoints({ points = [], compact = false }) {
+  if (points.length < 2) return null;
+  const start = points[0];
+  const end = points[points.length - 1];
+  return (
+    <>
+      <Marker position={[Number(start.latitude), Number(start.longitude)]} icon={createRouteEndpointIcon("IN", "start")}>
+        <Tooltip direction="top" offset={[0, -12]} permanent={!compact}>Inicio de ruta</Tooltip>
+      </Marker>
+      <Marker position={[Number(end.latitude), Number(end.longitude)]} icon={createRouteEndpointIcon("FIN", "end")}>
+        <Tooltip direction="top" offset={[0, -12]} permanent={!compact}>Fin de ruta</Tooltip>
+      </Marker>
+    </>
+  );
+}
+
 export function RouteEditorMap({ points, markers = [], color = "#2563eb", selectedNeighborhood = "", onAddPoint, onRemovePoint, onAddMarker, onRemoveMarker, mode = "route" }) {
   const editorFitKey = `${points.length}-${markers.length}-${points.at(-1)?.latitude || ""}-${points.at(-1)?.longitude || ""}`;
   return (
@@ -235,8 +260,10 @@ export function RouteEditorMap({ points, markers = [], color = "#2563eb", select
       <PlanningLegend />
       {points.length > 1 && (
         <>
-          <Polyline positions={points.map((p) => [p.latitude, p.longitude])} pathOptions={{ color: "#ffffff", weight: 10, opacity: 0.86 }} />
-          <Polyline positions={points.map((p) => [p.latitude, p.longitude])} pathOptions={{ color, weight: 5, opacity: 0.95 }} />
+          <Polyline positions={points.map((p) => [p.latitude, p.longitude])} pathOptions={{ color: "#ffffff", weight: 12, opacity: 0.9 }} />
+          <Polyline positions={points.map((p) => [p.latitude, p.longitude])} pathOptions={{ color, weight: 7, opacity: 0.9 }} />
+          <Polyline positions={points.map((p) => [p.latitude, p.longitude])} pathOptions={{ color: "#ffffff", weight: 2, opacity: 0.86, dashArray: "1 14" }} />
+          <RouteEndpoints points={points} />
         </>
       )}
       {points.map((point, index) => (
@@ -286,8 +313,14 @@ export function MonitorMap({ routes = [], locations = [], tracks = [], compact =
             <Polyline
               key={`route-${route.assignment_id || route.id}-${route.service_day || "all"}`}
               positions={route.points.map((p) => [p.latitude, p.longitude])}
-              pathOptions={{ color: route.color || "#2563eb", weight: compact ? 5 : 6, opacity: 0.98 }}
+              pathOptions={{ color: route.color || "#2563eb", weight: compact ? 6 : 7, opacity: 0.95 }}
             />
+            <Polyline
+              key={`route-guide-${route.assignment_id || route.id}-${route.service_day || "all"}`}
+              positions={route.points.map((p) => [p.latitude, p.longitude])}
+              pathOptions={{ color: "#ffffff", weight: 2, opacity: 0.9, dashArray: "1 16" }}
+            />
+            <RouteEndpoints points={route.points} compact={compact} />
           </Fragment>
         ) : null
       )}
