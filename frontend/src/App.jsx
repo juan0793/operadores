@@ -1,4 +1,4 @@
-import { Activity, AlertTriangle, ClipboardList, History, KeyRound, LogOut, MapPin, Navigation, Play, Plus, Radio, Route, Trash2, UserCheck, UserPlus, Users } from "lucide-react";
+import { Activity, AlertTriangle, ClipboardList, Download, FileSpreadsheet, FileText, History, KeyRound, LogOut, MapPin, Navigation, Play, Plus, Radio, Route, Trash2, UserCheck, UserPlus, Users } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { apiFetch, getApiUrl } from "./api.js";
@@ -55,6 +55,47 @@ function statusLabel(status) {
     completed: "Completada",
     cancelled: "Cancelada",
   }[status] || status;
+}
+
+function formatReportDate(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString();
+}
+
+function reportFileStamp() {
+  return new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function tableRowsToHtml(rows) {
+  if (rows.length === 0) return "<tr><td>Sin datos</td></tr>";
+  const columns = Object.keys(rows[0]);
+  return `
+    <thead><tr>${columns.map((column) => `<th>${escapeHtml(column)}</th>`).join("")}</tr></thead>
+    <tbody>
+      ${rows.map((row) => `<tr>${columns.map((column) => `<td>${escapeHtml(row[column])}</td>`).join("")}</tr>`).join("")}
+    </tbody>
+  `;
 }
 
 function useSession() {
@@ -279,6 +320,134 @@ function AdminDashboard({ user }) {
     }));
     return { completed: completed.length, averageMinutes, gpsPoints, byStatus, byOperator, byRoute, hourly };
   }, [assignments, locations, operators, tracks, warnings]);
+
+  const reportExport = useMemo(() => {
+    const generatedAt = formatReportDate(new Date());
+    const summaryRows = [
+      { Indicador: "Rutas completadas", Valor: reportStats.completed, Detalle: `${assignments.length} asignaciones totales` },
+      { Indicador: "Tiempo promedio", Valor: `${reportStats.averageMinutes} min`, Detalle: "Inicio a finalizacion" },
+      { Indicador: "Puntos GPS", Valor: reportStats.gpsPoints, Detalle: "Ultimas 12 horas" },
+      { Indicador: "Alertas", Valor: warnings.length, Detalle: "Desvios recientes" },
+    ];
+    const assignmentRows = assignments.map((item) => ({
+      Ruta: item.route_name || "-",
+      Barrio: item.neighborhood || "-",
+      Vehiculo: item.vehicle_name || "Aguas de Choluteca",
+      Operador: item.operator_name || "-",
+      Dia: dayLabel(item.service_day),
+      Estado: statusLabel(item.status),
+      Avance: `${Number(item.progress_percent || 0)}%`,
+      Asignada: formatReportDate(item.assigned_at),
+      Inicio: formatReportDate(item.started_at),
+      Finalizacion: formatReportDate(item.completed_at),
+    }));
+    const operatorRows = reportStats.byOperator.map((operator) => ({
+      Operador: operator.name,
+      Correo: operator.email || "-",
+      Telefono: operator.phone || "-",
+      Estado: operator.is_active ? "Activo" : "Inactivo",
+      Rutas: operator.assignments,
+      "Promedio avance": `${operator.progress}%`,
+      Alertas: operator.warnings,
+    }));
+    const warningRows = warnings.map((warning) => ({
+      Fecha: formatReportDate(warning.created_at),
+      Ruta: warning.route_name || `Ruta #${warning.route_id}`,
+      Operador: warning.operator_name || `Operador #${warning.operator_id}`,
+      Detalle: warning.notes || warning.message || "Operador fuera de la ruta marcada.",
+    }));
+    return { generatedAt, summaryRows, assignmentRows, operatorRows, warningRows };
+  }, [assignments, reportStats, warnings]);
+
+  function exportExcelReport() {
+    const sections = [
+      ["Resumen", reportExport.summaryRows],
+      ["Historial operativo", reportExport.assignmentRows],
+      ["Operadores", reportExport.operatorRows],
+      ["Alertas", reportExport.warningRows],
+    ];
+    const workbookHtml = `
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <style>
+            body { font-family: Arial, sans-serif; color: #172033; }
+            h1 { font-size: 22px; margin: 0 0 4px; }
+            h2 { margin: 22px 0 8px; font-size: 16px; color: #0f766e; }
+            p { margin: 0 0 14px; color: #526173; }
+            table { border-collapse: collapse; width: 100%; margin-bottom: 12px; }
+            th { background: #0f766e; color: #ffffff; }
+            th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
+          </style>
+        </head>
+        <body>
+          <h1>Reporte de rutas y operadores</h1>
+          <p>Generado: ${escapeHtml(reportExport.generatedAt)}</p>
+          ${sections.map(([title, rows]) => `<h2>${escapeHtml(title)}</h2><table>${tableRowsToHtml(rows)}</table>`).join("")}
+        </body>
+      </html>
+    `;
+    downloadBlob(
+      new Blob(["\ufeff", workbookHtml], { type: "application/vnd.ms-excel;charset=utf-8" }),
+      `reporte-operadores-${reportFileStamp()}.xls`
+    );
+  }
+
+  async function exportPdfReport() {
+    setBusyAction("exportPdf");
+    try {
+      const [{ jsPDF }, autoTableModule] = await Promise.all([import("jspdf"), import("jspdf-autotable")]);
+      const autoTable = autoTableModule.default;
+      const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "letter" });
+      const addSection = (title, rows, startY) => {
+        doc.setFontSize(12);
+        doc.setTextColor(15, 118, 110);
+        doc.text(title, 40, startY);
+        if (rows.length === 0) {
+          doc.setFontSize(9);
+          doc.setTextColor(82, 97, 115);
+          doc.text("Sin datos", 40, startY + 18);
+          return startY + 38;
+        }
+        autoTable(doc, {
+          startY: startY + 10,
+          head: [Object.keys(rows[0])],
+          body: rows.map((row) => Object.values(row)),
+          styles: { fontSize: 8, cellPadding: 5, overflow: "linebreak" },
+          headStyles: { fillColor: [15, 118, 110], textColor: [255, 255, 255] },
+          alternateRowStyles: { fillColor: [248, 250, 252] },
+          margin: { left: 40, right: 40 },
+        });
+        return doc.lastAutoTable.finalY + 28;
+      };
+
+      doc.setFontSize(18);
+      doc.setTextColor(23, 32, 51);
+      doc.text("Reporte de rutas y operadores", 40, 42);
+      doc.setFontSize(9);
+      doc.setTextColor(82, 97, 115);
+      doc.text(`Generado: ${reportExport.generatedAt}`, 40, 60);
+
+      let y = addSection("Resumen", reportExport.summaryRows, 88);
+      y = addSection("Historial operativo", reportExport.assignmentRows.slice(0, 28), y);
+      if (y > 470) {
+        doc.addPage();
+        y = 42;
+      }
+      y = addSection("Operadores", reportExport.operatorRows, y);
+      if (reportExport.warningRows.length > 0) {
+        if (y > 470) {
+          doc.addPage();
+          y = 42;
+        }
+        addSection("Alertas", reportExport.warningRows, y);
+      }
+      doc.save(`reporte-operadores-${reportFileStamp()}.pdf`);
+    } finally {
+      setBusyAction("");
+    }
+  }
 
   async function saveRoute(event) {
     event.preventDefault();
@@ -693,7 +862,18 @@ function AdminDashboard({ user }) {
       </section>
 
       <section id="reportes" className="panel wide">
-        <div className="panel-title"><ClipboardList /><h2>Reportes estadísticos</h2></div>
+        <div className="panel-title report-title">
+          <div><ClipboardList /><h2>Reportes estadísticos</h2></div>
+          <div className="report-actions" aria-label="Descargar reportes">
+            <button className="ghost icon-action" type="button" onClick={exportExcelReport}>
+              <FileSpreadsheet size={18} />Excel
+            </button>
+            <button className="primary icon-action" type="button" onClick={exportPdfReport} disabled={busyAction === "exportPdf"}>
+              {busyAction === "exportPdf" ? <Download size={18} /> : <FileText size={18} />}
+              {busyAction === "exportPdf" ? "Generando..." : "PDF"}
+            </button>
+          </div>
+        </div>
         <div className="report-hero">
           <article><span>Rutas completadas</span><strong>{reportStats.completed}</strong><small>{assignments.length} asignaciones totales</small></article>
           <article><span>Tiempo promedio</span><strong>{reportStats.averageMinutes} min</strong><small>Inicio a finalización</small></article>
@@ -1012,11 +1192,26 @@ function OperatorDashboard({ user }) {
     <main className="operator-view">
       <header className="mobile-header">
         <div><span className="eyebrow">Operador</span><h1>{user.name}</h1></div>
-        <Navigation />
+        <div className={watching ? "operator-status active" : "operator-status"}>
+          <Navigation size={18} />
+          <span>{watching ? "GPS activo" : "Listo"}</span>
+        </div>
       </header>
-      <section className="panel">
-        <h2>Ruta asignada</h2>
+      <section className="panel operator-panel">
+        <div className="operator-panel-head">
+          <div>
+            <span className="eyebrow">Turno actual</span>
+            <h2>Ruta asignada</h2>
+          </div>
+          <span className="live-pill">{offlineCount > 0 ? `${offlineCount} pendientes` : "Sin pendientes"}</span>
+        </div>
+        <div className="operator-quick-stats">
+          <article><strong>{assignments.length}</strong><span>Rutas</span></article>
+          <article><strong>{active ? Number(active.progress_percent || 0) : 0}%</strong><span>Avance</span></article>
+          <article><strong>{watching ? "On" : "Off"}</strong><span>GPS</span></article>
+        </div>
         <select
+          className="operator-route-select"
           value={active?.id || ""}
           disabled={!assignmentsLoaded || assignments.length === 0}
           onChange={(e) => setActive(assignments.find((item) => item.id === Number(e.target.value)) || null)}
@@ -1039,14 +1234,21 @@ function OperatorDashboard({ user }) {
         )}
         {active && (
           <div className="operator-card">
-            <span className="badge">{statusLabel(active.status)}</span>
-            <h3>{active.vehicle_name || "Aguas de Choluteca"}</h3>
-            <p>{active.route_name}</p>
-            <p>{dayLabel(active.service_day)}</p>
+            <div className="operator-card-head">
+              <span className="badge">{statusLabel(active.status)}</span>
+              <strong>{dayLabel(active.service_day)}</strong>
+            </div>
+            <h3>{active.route_name}</h3>
+            <p>{active.vehicle_name || "Aguas de Choluteca"}</p>
             <div className="progress"><span style={{ width: `${Number(active.progress_percent)}%` }} /></div>
-            <p>{Number(active.progress_percent)}% reportado</p>
-            <button className="primary big" onClick={startGps} disabled={watching || active.status === "completed"}><Play />{watching ? "GPS activo" : "Iniciar seguimiento"}</button>
-            <button className="ghost big" onClick={complete} disabled={completing || !active || active.status === "completed"}>{completing ? "Finalizando..." : "Finalizar ruta"}</button>
+            <div className="operator-progress-row">
+              <span>{Number(active.progress_percent)}% reportado</span>
+              <small>{active.status === "completed" ? "Finalizada" : "En servicio"}</small>
+            </div>
+            <div className="operator-button-row">
+              <button className="primary big" onClick={startGps} disabled={watching || active.status === "completed"}><Play />{watching ? "GPS activo" : "Iniciar seguimiento"}</button>
+              <button className="ghost big" onClick={complete} disabled={completing || !active || active.status === "completed"}>{completing ? "Finalizando..." : "Finalizar ruta"}</button>
+            </div>
           </div>
         )}
         {activeRoute && (
