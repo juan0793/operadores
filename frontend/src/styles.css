@@ -1029,6 +1029,21 @@ td {
   margin-top: 16px;
 }
 
+.operator-empty-state {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  color: #075985;
+  background: linear-gradient(135deg, #e0f2fe, #f8fafc);
+}
+
+.operator-empty-state span {
+  color: #475569;
+}
+
 .operator-map {
   height: min(64vh, 520px);
   min-height: 360px;

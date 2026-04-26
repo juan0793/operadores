@@ -1010,9 +1010,20 @@ function OperatorDashboard({ user }) {
       </header>
       <section className="panel">
         <h2>Ruta asignada</h2>
-        <select value={active?.id || ""} onChange={(e) => setActive(assignments.find((item) => item.id === Number(e.target.value)))}>
+        <select
+          value={active?.id || ""}
+          disabled={assignments.length === 0}
+          onChange={(e) => setActive(assignments.find((item) => item.id === Number(e.target.value)))}
+        >
+          {assignments.length === 0 && <option value="">Sin rutas asignadas</option>}
           {assignments.map((item) => <option key={item.id} value={item.id}>{item.route_name}</option>)}
         </select>
+        {assignments.length === 0 && (
+          <div className="operator-empty-state">
+            <strong>No tienes rutas asignadas por ahora.</strong>
+            <span>Cuando el supervisor te asigne una ruta, aparecerá aquí para iniciar seguimiento GPS desde el celular.</span>
+          </div>
+        )}
         {active && (
           <div className="operator-card">
             <span className="badge">{statusLabel(active.status)}</span>
