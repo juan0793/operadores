@@ -42,6 +42,15 @@ function dayLabel(day) {
   return weekDays.find((item) => item.value === day)?.label || day || "Sin día";
 }
 
+function getInitials(name = "") {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "OP";
+}
+
 function getTodayServiceDay() {
   const days = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
   return days[new Date().getDay()];
@@ -725,13 +734,16 @@ function AdminDashboard({ user }) {
             <div className="operator-management-grid">
               {operators.map((operator) => (
                 <article className="operator-management-card" key={operator.id}>
-                  <div>
-                    <span className={`status-pill ${operator.is_active ? "active" : "inactive"}`}>
-                      {operator.is_active ? "Activo" : "Inactivo"}
-                    </span>
-                    <h3>{operator.name}</h3>
-                    <p>{operator.email}</p>
-                    <small>{operator.phone || "Sin teléfono"} - Alta {new Date(operator.created_at).toLocaleDateString()}</small>
+                  <div className="operator-card-main">
+                    <span className={`operator-avatar ${operator.is_active ? "active" : "inactive"}`}>{getInitials(operator.name)}</span>
+                    <div>
+                      <span className={`status-pill ${operator.is_active ? "active" : "inactive"}`}>
+                        {operator.is_active ? "Activo" : "Inactivo"}
+                      </span>
+                      <h3>{operator.name}</h3>
+                      <p>{operator.email}</p>
+                      <small>{operator.phone || "Sin teléfono"} - Alta {new Date(operator.created_at).toLocaleDateString()}</small>
+                    </div>
                   </div>
                   <div className="operator-actions">
                     <button
@@ -766,8 +778,12 @@ function AdminDashboard({ user }) {
           <div className="operator-event-list">
             {operatorEvents.slice(0, 12).map((event) => (
               <article className="operator-event" key={`${event.id || event.operator_id}-${event.created_at}`}>
-                <strong>{event.notes || `El operador ${event.operator_name || event.operator_id} ha ingresado al sistema`}</strong>
-                <span>{event.created_at ? new Date(event.created_at).toLocaleString() : "Ahora"}</span>
+                <span className="operator-event-icon"><History size={18} /></span>
+                <div>
+                  <strong>{event.notes || `El operador ${event.operator_name || event.operator_id} ha ingresado al sistema`}</strong>
+                  <small>Acceso confirmado</small>
+                </div>
+                <time>{event.created_at ? new Date(event.created_at).toLocaleString() : "Ahora"}</time>
               </article>
             ))}
           </div>
