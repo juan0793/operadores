@@ -999,7 +999,7 @@ function AdminDashboard({ user }) {
   );
 }
 
-function OperatorDashboard({ user }) {
+function OperatorDashboard({ user, onLogout }) {
   const [assignments, setAssignments] = useState([]);
   const [assignmentsLoaded, setAssignmentsLoaded] = useState(false);
   const [active, setActive] = useState(null);
@@ -1188,13 +1188,29 @@ function OperatorDashboard({ user }) {
     }
   }
 
+  function logoutOperator() {
+    if (watchIdRef.current !== null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    socketRef.current?.disconnect();
+    socketRef.current = null;
+    setWatching(false);
+    onLogout();
+  }
+
   return (
     <main className="operator-view">
       <header className="mobile-header">
         <div><span className="eyebrow">Operador</span><h1>{user.name}</h1></div>
-        <div className={watching ? "operator-status active" : "operator-status"}>
-          <Navigation size={18} />
-          <span>{watching ? "GPS activo" : "Listo"}</span>
+        <div className="operator-header-actions">
+          <div className={watching ? "operator-status active" : "operator-status"}>
+            <Navigation size={18} />
+            <span>{watching ? "GPS activo" : "Listo"}</span>
+          </div>
+          <button className="ghost operator-logout" type="button" onClick={logoutOperator}>
+            <LogOut size={18} />Salir
+          </button>
         </div>
       </header>
       <section className="panel operator-panel">
@@ -1443,7 +1459,7 @@ export default function App() {
 
   if (isPublic) return <PublicScreen />;
   if (!user) return <Login onLogin={login} />;
-  if (user.role === "operador") return <OperatorDashboard user={user} />;
+  if (user.role === "operador") return <OperatorDashboard user={user} onLogout={logout} />;
   if (user.role === "publico") return <PublicScreen />;
 
   return (
