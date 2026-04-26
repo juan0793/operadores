@@ -821,6 +821,7 @@ function AdminDashboard({ user }) {
 
 function OperatorDashboard({ user }) {
   const [assignments, setAssignments] = useState([]);
+  const [assignmentsLoaded, setAssignmentsLoaded] = useState(false);
   const [active, setActive] = useState(null);
   const [activeRoute, setActiveRoute] = useState(null);
   const [currentLocation, setCurrentLocation] = useState(null);
@@ -835,7 +836,12 @@ function OperatorDashboard({ user }) {
   async function load() {
     const list = await apiFetch("/api/assignments");
     setAssignments(list);
-    setActive((current) => current || list.find((item) => item.status !== "completed"));
+    setActive((current) => {
+      if (list.length === 0) return null;
+      if (current && list.some((item) => Number(item.id) === Number(current.id))) return current;
+      return list.find((item) => item.status !== "completed") || list[0];
+    });
+    setAssignmentsLoaded(true);
   }
 
   useEffect(() => { load(); }, []);
@@ -1012,13 +1018,20 @@ function OperatorDashboard({ user }) {
         <h2>Ruta asignada</h2>
         <select
           value={active?.id || ""}
-          disabled={assignments.length === 0}
-          onChange={(e) => setActive(assignments.find((item) => item.id === Number(e.target.value)))}
+          disabled={!assignmentsLoaded || assignments.length === 0}
+          onChange={(e) => setActive(assignments.find((item) => item.id === Number(e.target.value)) || null)}
         >
-          {assignments.length === 0 && <option value="">Sin rutas asignadas</option>}
+          {!assignmentsLoaded && <option value="">Cargando rutas...</option>}
+          {assignmentsLoaded && assignments.length === 0 && <option value="">Sin rutas asignadas</option>}
           {assignments.map((item) => <option key={item.id} value={item.id}>{item.route_name}</option>)}
         </select>
-        {assignments.length === 0 && (
+        {!assignmentsLoaded && (
+          <div className="operator-empty-state loading">
+            <strong>Revisando rutas asignadas...</strong>
+            <span>Estamos consultando tus rutas disponibles para hoy y la semana.</span>
+          </div>
+        )}
+        {assignmentsLoaded && assignments.length === 0 && (
           <div className="operator-empty-state">
             <strong>No tienes rutas asignadas por ahora.</strong>
             <span>Cuando el supervisor te asigne una ruta, aparecerá aquí para iniciar seguimiento GPS desde el celular.</span>

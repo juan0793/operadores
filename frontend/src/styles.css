@@ -1044,6 +1044,12 @@ td {
   color: #475569;
 }
 
+.operator-empty-state.loading {
+  border-color: #d8e0ea;
+  color: #334155;
+  background: #f8fafc;
+}
+
 .operator-map {
   height: min(64vh, 520px);
   min-height: 360px;
