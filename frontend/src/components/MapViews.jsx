@@ -24,9 +24,9 @@ function createVehicleIcon(vehicleName, heading) {
   const rotation = Number.isFinite(Number(heading)) ? Number(heading) : 0;
   return new L.DivIcon({
     className: "vehicle-marker",
-    html: `<span class="vehicle-label">${label}</span><span class="vehicle-shell" style="transform: rotate(${rotation}deg)"><span class="vehicle-direction"></span><span class="vehicle-body"><span class="vehicle-window"></span><span class="vehicle-stripe"></span><span class="vehicle-badge">AC</span></span></span>`,
-    iconSize: [146, 74],
-    iconAnchor: [73, 50],
+    html: `<span class="vehicle-label">${label}</span><span class="vehicle-shell" style="transform: rotate(${rotation}deg)"><span class="vehicle-direction"></span><span class="vehicle-shadow"></span><span class="vehicle-body"><span class="vehicle-window"></span><span class="vehicle-stripe"></span><span class="vehicle-badge">AC</span></span></span>`,
+    iconSize: [136, 78],
+    iconAnchor: [68, 52],
   });
 }
 
@@ -62,6 +62,22 @@ const cityTiles = {
   imageryUrl: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
   labelsUrl: "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
   attribution: "Tiles &copy; Esri, Maxar, Earthstar Geographics, and the GIS User Community",
+};
+const smoothMapProps = {
+  preferCanvas: true,
+  zoomSnap: 0.25,
+  zoomDelta: 0.5,
+  wheelPxPerZoomLevel: 100,
+  inertia: true,
+  inertiaDeceleration: 2400,
+  markerZoomAnimation: true,
+  fadeAnimation: true,
+};
+const smoothTileProps = {
+  maxZoom: 20,
+  keepBuffer: 5,
+  updateWhenIdle: true,
+  updateWhenZooming: false,
 };
 
 const planningZones = [
@@ -248,9 +264,9 @@ function RouteEndpoints({ points = [], compact = false }) {
 export function RouteEditorMap({ points, markers = [], color = "#2563eb", selectedNeighborhood = "", showLandmarks = true, onAddPoint, onRemovePoint, onAddMarker, onRemoveMarker, mode = "route" }) {
   const editorFitKey = `${points.length}-${markers.length}-${points.at(-1)?.latitude || ""}-${points.at(-1)?.longitude || ""}`;
   return (
-    <MapContainer className="map" center={points[0] ? [points[0].latitude, points[0].longitude] : cholutecaCenter} zoom={15} minZoom={12} maxZoom={20} maxBounds={cholutecaBounds} scrollWheelZoom touchZoom doubleClickZoom>
-      <TileLayer attribution={cityTiles.attribution} url={cityTiles.imageryUrl} maxZoom={20} />
-      <TileLayer url={cityTiles.labelsUrl} maxZoom={20} pane="overlayPane" />
+    <MapContainer className="map" center={points[0] ? [points[0].latitude, points[0].longitude] : cholutecaCenter} zoom={15} minZoom={12} maxZoom={20} maxBounds={cholutecaBounds} scrollWheelZoom touchZoom doubleClickZoom {...smoothMapProps}>
+      <TileLayer attribution={cityTiles.attribution} url={cityTiles.imageryUrl} {...smoothTileProps} />
+      <TileLayer url={cityTiles.labelsUrl} pane="overlayPane" {...smoothTileProps} />
       <MapResizeFix />
       <ClickCollector onAddPoint={(point) => (mode === "marker" ? onAddMarker?.(point) : onAddPoint?.(point))} />
       <FitBounds points={points.length ? points : markers} fitKey={editorFitKey} />
@@ -295,9 +311,9 @@ export function MonitorMap({ routes = [], locations = [], tracks = [], compact =
     tracks.map((track) => `${track.assignment_id}:${track.points?.length || 0}`).join("-"),
   ].join("|");
   return (
-    <MapContainer className={`map ${compact ? "map-compact" : "map-large"}`} center={cholutecaCenter} zoom={14} minZoom={12} maxZoom={20} maxBounds={cholutecaBounds} scrollWheelZoom touchZoom doubleClickZoom>
-      <TileLayer attribution={cityTiles.attribution} url={cityTiles.imageryUrl} maxZoom={20} />
-      <TileLayer url={cityTiles.labelsUrl} maxZoom={20} pane="overlayPane" />
+    <MapContainer className={`map ${compact ? "map-compact" : "map-large"}`} center={cholutecaCenter} zoom={14} minZoom={12} maxZoom={20} maxBounds={cholutecaBounds} scrollWheelZoom touchZoom doubleClickZoom {...smoothMapProps}>
+      <TileLayer attribution={cityTiles.attribution} url={cityTiles.imageryUrl} {...smoothTileProps} />
+      <TileLayer url={cityTiles.labelsUrl} pane="overlayPane" {...smoothTileProps} />
       <MapResizeFix />
       <FitBounds points={routePoints.length ? routePoints : (trackPoints.length ? trackPoints : locations)} fitKey={defaultFitKey} />
       {showLandmarks && <LandmarkMarkers compact={compact} />}

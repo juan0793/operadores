@@ -1032,6 +1032,7 @@ function OperatorDashboard({ user, onLogout }) {
   const [offlineCount, setOfflineCount] = useState(() => JSON.parse(localStorage.getItem("rutas_pending_locations") || "[]").length);
   const watchIdRef = useRef(null);
   const socketRef = useRef(null);
+  const hiddenAtRef = useRef(null);
 
   async function load() {
     const list = await apiFetch("/api/assignments");
@@ -1110,6 +1111,32 @@ function OperatorDashboard({ user, onLogout }) {
     flushQueue();
     return () => window.removeEventListener("online", flushQueue);
   }, []);
+
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (!watching) return;
+      if (document.hidden) {
+        hiddenAtRef.current = Date.now();
+        setOperatorNotice({
+          type: "warning",
+          title: "App en segundo plano",
+          text: "Algunos telefonos pausan el GPS del navegador cuando la app se minimiza. Manten esta pantalla abierta durante el recorrido.",
+        });
+        return;
+      }
+      if (hiddenAtRef.current) {
+        const seconds = Math.max(1, Math.round((Date.now() - hiddenAtRef.current) / 1000));
+        hiddenAtRef.current = null;
+        setOperatorNotice({
+          type: "info",
+          title: "Seguimiento reanudado",
+          text: `La app volvio al frente despues de ${seconds} s. Verifica que el GPS siga activo y el carrito continue moviendose.`,
+        });
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [watching]);
 
   function startGps() {
     if (!active) return;
