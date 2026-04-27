@@ -111,11 +111,10 @@ const municipalGuides = [
 ];
 
 const cityLandmarks = [
-  { name: "Parque Central de Choluteca", type: "Referencia central", position: [13.3029, -87.1907] },
-  { name: "Catedral de Choluteca", type: "Referencia histórica", position: [13.3038, -87.1902] },
-  { name: "Puente Choluteca", type: "Referencia vial", position: [13.3007, -87.2022] },
-  { name: "Mercado Municipal", type: "Zona comercial", position: [13.3064, -87.1938] },
-  { name: "Hospital del Sur", type: "Referencia de emergencia", position: [13.2962, -87.1878] },
+  { name: "Catedral de Choluteca", type: "Referencia historica verificada", position: [13.3063687, -87.1948387] },
+  { name: "Parque Central de Choluteca", type: "Referencia central", position: [13.3059, -87.1942] },
+  { name: "Puente Choluteca", type: "Referencia vial verificada", position: [13.3117073, -87.1915349] },
+  { name: "Mercado Municipal", type: "Zona comercial", position: [13.3066, -87.1956] },
 ];
 
 function MapResizeFix() {
@@ -246,7 +245,7 @@ function RouteEndpoints({ points = [], compact = false }) {
   );
 }
 
-export function RouteEditorMap({ points, markers = [], color = "#2563eb", selectedNeighborhood = "", onAddPoint, onRemovePoint, onAddMarker, onRemoveMarker, mode = "route" }) {
+export function RouteEditorMap({ points, markers = [], color = "#2563eb", selectedNeighborhood = "", showLandmarks = true, onAddPoint, onRemovePoint, onAddMarker, onRemoveMarker, mode = "route" }) {
   const editorFitKey = `${points.length}-${markers.length}-${points.at(-1)?.latitude || ""}-${points.at(-1)?.longitude || ""}`;
   return (
     <MapContainer className="map" center={points[0] ? [points[0].latitude, points[0].longitude] : cholutecaCenter} zoom={15} minZoom={12} maxZoom={20} maxBounds={cholutecaBounds} scrollWheelZoom touchZoom doubleClickZoom>
@@ -256,7 +255,7 @@ export function RouteEditorMap({ points, markers = [], color = "#2563eb", select
       <ClickCollector onAddPoint={(point) => (mode === "marker" ? onAddMarker?.(point) : onAddPoint?.(point))} />
       <FitBounds points={points.length ? points : markers} fitKey={editorFitKey} />
       <PlanningOverlays selectedNeighborhood={selectedNeighborhood} />
-      <LandmarkMarkers />
+      {showLandmarks && <LandmarkMarkers />}
       <PlanningLegend />
       {points.length > 1 && (
         <>
@@ -287,7 +286,7 @@ export function RouteEditorMap({ points, markers = [], color = "#2563eb", select
   );
 }
 
-export function MonitorMap({ routes = [], locations = [], tracks = [], compact = false, fitKey = "" }) {
+export function MonitorMap({ routes = [], locations = [], tracks = [], compact = false, fitKey = "", showLandmarks = true }) {
   const routePoints = routes.flatMap((route) => route.points || []);
   const trackPoints = tracks.flatMap((track) => track.points || []);
   const defaultFitKey = fitKey || [
@@ -301,7 +300,7 @@ export function MonitorMap({ routes = [], locations = [], tracks = [], compact =
       <TileLayer url={cityTiles.labelsUrl} maxZoom={20} pane="overlayPane" />
       <MapResizeFix />
       <FitBounds points={routePoints.length ? routePoints : (trackPoints.length ? trackPoints : locations)} fitKey={defaultFitKey} />
-      <LandmarkMarkers compact={compact} />
+      {showLandmarks && <LandmarkMarkers compact={compact} />}
       {routes.map((route) =>
         route.points?.length > 1 ? (
           <Fragment key={`route-layer-${route.assignment_id || route.id}-${route.service_day || "all"}`}>

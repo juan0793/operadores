@@ -237,6 +237,7 @@ function AdminDashboard({ user }) {
   const [actionMessage, setActionMessage] = useState(null);
   const [busyAction, setBusyAction] = useState("");
   const [mapMode, setMapMode] = useState("route");
+  const [showMapReferences, setShowMapReferences] = useState(true);
   const [markerDraft, setMarkerDraft] = useState({ label: "", marker_type: "referencia" });
   const [selectedRoute, setSelectedRoute] = useState("");
   const [selectedOperator, setSelectedOperator] = useState("");
@@ -651,6 +652,7 @@ function AdminDashboard({ user }) {
           )}
           <label className="span-2">Descripción<textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
           <label className="check"><input type="checkbox" checked={form.is_public} onChange={(e) => setForm({ ...form, is_public: e.target.checked })} />Visible al público</label>
+          <label className="check map-reference-check"><input type="checkbox" checked={showMapReferences} onChange={(e) => setShowMapReferences(e.target.checked)} />Mostrar referencias del mapa</label>
           <div className="marker-tools span-2">
             <div className="segmented">
               <button type="button" className={mapMode === "route" ? "active" : ""} onClick={() => setMapMode("route")}>Trazar ruta</button>
@@ -672,6 +674,7 @@ function AdminDashboard({ user }) {
               color={form.color}
               mode={mapMode}
               selectedNeighborhood={form.neighborhood}
+              showLandmarks={showMapReferences}
               onAddPoint={(point) => setForm({ ...form, points: [...form.points, point] })}
               onRemovePoint={(index) => setForm({ ...form, points: form.points.filter((_, i) => i !== index) })}
               onAddMarker={(point) => {
@@ -832,7 +835,8 @@ function AdminDashboard({ user }) {
           <span><strong>{warnings.length}</strong> alertas</span>
           <span><strong>{tracks.reduce((total, track) => total + (track.points?.length || 0), 0)}</strong> puntos GPS</span>
         </div>
-        <MonitorMap routes={detailedRoutes} locations={locations} tracks={tracks} />
+        <label className="check map-reference-check"><input type="checkbox" checked={showMapReferences} onChange={(e) => setShowMapReferences(e.target.checked)} />Mostrar referencias del mapa</label>
+        <MonitorMap routes={detailedRoutes} locations={locations} tracks={tracks} showLandmarks={showMapReferences} />
       </section>
 
       <section className="panel wide">
@@ -1317,6 +1321,7 @@ function PublicScreen() {
   const [routes, setRoutes] = useState([]);
   const [expandedRoute, setExpandedRoute] = useState(null);
   const [selectedPublicDay, setSelectedPublicDay] = useState(getTodayServiceDay);
+  const [showMapReferences, setShowMapReferences] = useState(true);
 
   async function load() {
     const list = await apiFetch("/api/public/routes", { headers: {} });
@@ -1387,8 +1392,9 @@ function PublicScreen() {
           <span><strong>{activeRoutes}</strong> activas</span>
           <span><strong>{completedRoutes}</strong> completadas</span>
         </div>
+        <label className="check public-reference-check"><input type="checkbox" checked={showMapReferences} onChange={(e) => setShowMapReferences(e.target.checked)} />Mostrar referencias</label>
       </section>
-      <section className="public-map"><MonitorMap routes={visibleRoutes} locations={visibleLocations} tracks={[]} /></section>
+      <section className="public-map"><MonitorMap routes={visibleRoutes} locations={visibleLocations} tracks={[]} showLandmarks={showMapReferences} /></section>
       {focusRoutes.length === 0 ? (
         <section className="public-empty-state">
           <span className="eyebrow">Sin rutas visibles</span>
@@ -1418,7 +1424,7 @@ function PublicScreen() {
                 </div>
                 <strong>{route.progress_percent}%</strong>
               </div>
-              <MonitorMap routes={[route]} locations={routeLocation} tracks={[]} compact />
+              <MonitorMap routes={[route]} locations={routeLocation} tracks={[]} compact showLandmarks={showMapReferences} />
               <span className="expand-hint">Clic para pantalla completa</span>
             </article>
           );
@@ -1461,6 +1467,7 @@ function PublicScreen() {
               routes={[expandedRoute]}
               locations={expandedRoute.latitude && expandedRoute.longitude ? [expandedRoute] : []}
               tracks={[]}
+              showLandmarks={showMapReferences}
             />
           </div>
         </section>

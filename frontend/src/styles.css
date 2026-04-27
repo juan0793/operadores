@@ -492,6 +492,24 @@ textarea {
   min-height: auto;
 }
 
+.map-reference-check,
+.public-reference-check {
+  width: fit-content;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  color: #0f172a;
+  background: #ffffff;
+  font-weight: 800;
+}
+
+.public-reference-check {
+  border-color: rgba(148, 163, 184, 0.38);
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.72);
+}
+
 .editor-map,
 .map-large {
   min-height: 420px;
