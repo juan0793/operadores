@@ -728,19 +728,22 @@ textarea {
 
 .vehicle-label {
   display: block;
-  min-width: 112px;
-  margin-bottom: 4px;
-  padding: 4px 10px;
-  border: 2px solid rgba(255, 255, 255, 0.95);
+  min-width: 88px;
+  max-width: 104px;
+  margin-bottom: 3px;
+  padding: 3px 8px;
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
   border-radius: 999px;
   color: #ffffff;
   background: linear-gradient(135deg, #0284c7, #075985);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.38);
-  font-size: 10px;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.34);
+  font-size: 8.5px;
   font-weight: 900;
   line-height: 1;
   text-align: center;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .vehicle-shell {
@@ -754,8 +757,8 @@ textarea {
 .vehicle-shell::after {
   content: "";
   position: absolute;
-  inset: -15px -20px -17px;
-  border: 2px solid rgba(34, 197, 94, 0.48);
+  inset: -10px -14px -12px;
+  border: 1.5px solid rgba(34, 197, 94, 0.48);
   border-radius: 999px;
   animation: livePulse 2s ease-out infinite;
 }
@@ -773,20 +776,20 @@ textarea {
 
 .vehicle-direction {
   position: absolute;
-  top: -11px;
+  top: -8px;
   width: 0;
   height: 0;
-  border-right: 8px solid transparent;
-  border-bottom: 12px solid #7dd3fc;
-  border-left: 8px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 9px solid #7dd3fc;
+  border-left: 6px solid transparent;
   filter: drop-shadow(0 3px 4px rgba(15, 23, 42, 0.28));
 }
 
 .vehicle-shadow {
   position: absolute;
-  bottom: -9px;
-  width: 50px;
-  height: 15px;
+  bottom: -7px;
+  width: 38px;
+  height: 11px;
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.32);
   filter: blur(5px);
@@ -795,62 +798,62 @@ textarea {
 .vehicle-body {
   position: relative;
   display: block;
-  width: 50px;
-  height: 38px;
-  border: 3px solid #ffffff;
-  border-radius: 13px 13px 9px 9px;
+  width: 38px;
+  height: 29px;
+  border: 2px solid #ffffff;
+  border-radius: 10px 10px 7px 7px;
   background:
     linear-gradient(90deg, transparent 45%, rgba(255, 255, 255, 0.24) 48%, transparent 52%),
     linear-gradient(180deg, #38bdf8 0%, #0ea5e9 46%, #0369a1 100%);
-  box-shadow: 0 9px 20px rgba(15, 23, 42, 0.42);
+  box-shadow: 0 7px 16px rgba(15, 23, 42, 0.38);
 }
 
 .vehicle-body::before,
 .vehicle-body::after {
   content: "";
   position: absolute;
-  bottom: -9px;
-  width: 10px;
-  height: 10px;
+  bottom: -7px;
+  width: 8px;
+  height: 8px;
   border-radius: 999px;
   background: #172033;
-  border: 2px solid #ffffff;
+  border: 1.5px solid #ffffff;
 }
 
 .vehicle-body::before {
-  left: 7px;
+  left: 5px;
 }
 
 .vehicle-body::after {
-  right: 7px;
+  right: 5px;
 }
 
 .vehicle-window {
   position: absolute;
-  top: 6px;
-  left: 10px;
-  width: 28px;
-  height: 11px;
-  border-radius: 5px 5px 3px 3px;
+  top: 5px;
+  left: 8px;
+  width: 21px;
+  height: 8px;
+  border-radius: 4px 4px 2px 2px;
   background: #dff7ff;
 }
 
 .vehicle-stripe {
   position: absolute;
-  right: 8px;
-  bottom: 8px;
-  width: 34px;
-  height: 7px;
+  right: 6px;
+  bottom: 6px;
+  width: 25px;
+  height: 5px;
   border-radius: 999px;
   background: rgba(224, 242, 254, 0.92);
 }
 
 .vehicle-badge {
   position: absolute;
-  right: 6px;
-  top: 19px;
+  right: 5px;
+  top: 14px;
   color: #ffffff;
-  font-size: 8px;
+  font-size: 6.5px;
   font-weight: 900;
 }
 

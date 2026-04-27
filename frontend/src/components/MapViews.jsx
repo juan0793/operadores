@@ -25,8 +25,8 @@ function createVehicleIcon(vehicleName, heading) {
   return new L.DivIcon({
     className: "vehicle-marker",
     html: `<span class="vehicle-label">${label}</span><span class="vehicle-shell" style="transform: rotate(${rotation}deg)"><span class="vehicle-direction"></span><span class="vehicle-shadow"></span><span class="vehicle-body"><span class="vehicle-window"></span><span class="vehicle-stripe"></span><span class="vehicle-badge">AC</span></span></span>`,
-    iconSize: [136, 78],
-    iconAnchor: [68, 52],
+    iconSize: [104, 62],
+    iconAnchor: [52, 42],
   });
 }
 
